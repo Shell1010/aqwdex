@@ -1,0 +1,347 @@
+/* Fira Code monospace - if you prefer system monospace remove the @import line */
+
+/* 
+Style Guide
+
+Background Colours
+Background Pane: Base
+Secondary Panes: Crust or Mantle
+Surface Elements: Surface_0
+Overlays: Overlay_0
+
+Typography
+Body Copy: Text
+Main Headline: Text
+Sub-Headlines/Labels: Subtext_0, Subtext_1
+Subtle: Overlay_1
+On Accent: Base
+Links/URLs: Blue
+Success: Green
+Warnings: Yellow
+Errors: Red
+Tags/Pills: Blue
+Selection Background: Overlay_2 at 20-30% opacity
+Cursor: Rosewater
+
+*/
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+
+:root{
+  --rosewater: rgb(245, 224, 220);
+  --flamingo: rgb(242, 205, 205);
+  --pink: rgb(245, 194, 231);
+  --mauve: rgb(203, 166, 247);
+  --red: rgb(243, 139, 168);
+  --maroon: rgb(235, 160, 172);
+  --peach: rgb(250, 179, 135);
+  --yellow: rgb(249, 226, 175);
+  --green: rgb(166, 227, 161);
+  --teal: rgb(148, 226, 213);
+  --sky: rgb(137, 220, 235);
+  --sapphire: rgb(116, 199, 236);
+  --blue: rgb(137, 180, 250);
+  --lavender: rgb(180, 190, 254);
+  --text: rgb(205, 214, 244);
+  --subtext_1: rgb(186, 194, 222);
+  --subtext_0: rgb(166, 173, 200);
+  --overlay_2: rgb(147, 153, 178);
+  --overlay_1: rgb(127, 132, 156);
+  --overlay_0: rgb(108, 112, 134);
+  --surface_2: rgb(88, 91, 112);
+  --surface_1: rgb(69, 71, 90);
+  --surface_0: rgb(49, 50, 68);
+  --base: rgb(30, 30, 46);
+  --mantle: rgb(24, 24, 37);
+  --crust: rgb(17, 17, 27);
+
+  /* Shadows and UI radius */
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+
+body, input, button, textarea, select {
+  font-family: "Space Mono", monospace;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.aqw-header {
+	margin-right: -0.2em;
+	font-weight: 700;
+	font-size: 40px !important;
+	color: rgba(255,255,255,0) !important;
+	letter-spacing: .2em;
+	text-transform: uppercase;
+	text-shadow: 0 0 16px rgba(0,0,0,.32) !important;
+	background: linear-gradient(65deg, #4A9AC7 1%, #F148CC 99%) 0 0/100% 100%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	transition: margin-right 10s ease, letter-spacing 10s ease, background-position 10s ease, background-size 10s ease;
+  flex-direction: column;
+}
+
+
+.aqw-header:hover {
+	margin-right: -0.5em;
+	letter-spacing: .5em;
+	background-position: 50% 0;
+	background-size: 200% 100%;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--base);
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  color: var(--text);
+}
+
+h1 {
+  font-size: 40px;
+}
+
+.smol {
+  font-size: 12px;
+}
+
+h2 {
+  font-size: 20px;
+  color: var(--subtext_1);
+  letter-spacing: 0.5px;
+}
+
+h3 {
+  font-size: 16px;
+  color: var(--subtext_0);
+}
+
+.mono {
+  font-family: "Space Mono", monospace;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  background: var(--surface_0);
+  padding: 14px;
+
+  margin-bottom: 20px;
+
+
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+input, select, textarea {
+  background: var(--surface_1);
+  border: 1px solid var(--surface_2);
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  color: var(--text);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--blue);
+}
+
+button {
+  background: var(--blue);
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--base);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button.ghost {
+  background: var(--surface_1);
+  color: var(--text);
+}
+
+.pane {
+  background: var(--mantle);
+  padding: 12px;
+  border-radius: var(--radius);
+}
+
+/* Adds padding on desktop and reduces it on mobile */
+.page-container {
+  padding: 16px;
+}
+
+@media (min-width: 800px) {
+  .page-container {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .page-container {
+    padding-left: 60px;
+    padding-right: 60px;
+  }
+}
+
+
+.primary-column,
+.secondary-column,
+.stat-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface_1);
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--surface_2);
+}
+
+/* Key (label) */
+.kv span:first-child {
+  color: var(--subtext_1);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+/* Value (number) */
+.kv span:last-child {
+  color: var(--text);
+  font-weight: 700;
+  font-family: "Space Mono", monospace;
+}
+
+.enh-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px; /* spacing BETWEEN fields */
+}
+
+.enh-grid .full {
+  grid-column: span 2;
+}
+
+.enh-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* ← spacing between the label and input/select */
+}
+
+.enh-field span {
+  color: var(--subtext_1);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.enh-field input,
+.enh-field select {
+  background: var(--surface_1);
+  border: 1px solid var(--surface_2);
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  font-family: "Space Mono", monospace;
+  color: var(--text);
+}
+
+.player-panel {
+  width: 50%;
+  min-width: 500px;   /* optional */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;          /* spacing between card sections */
+}
+
+/* Enhancement Cards Grid */
+.enh-grid-container {
+  display: grid;
+  grid-template-columns: 1fr;  /* Mobile: 1 column */
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Desktop ≥700px: force 2×2 grid */
+@media (min-width: 700px) {
+  .enh-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Make enh cards compact */
+.enh-card {
+  background: var(--surface_0);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--surface_1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+}
+
+/* Inside card: grid for fields */
+.enh-card .enh-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.enh-card .enh-field.full {
+  grid-column: span 2;
+}
+
+.player-card {
+  padding: 16px;
+}
+
+.player-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.kv-input {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kv-input.full {
+  grid-column: span 2;
+}
+
+

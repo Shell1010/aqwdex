@@ -1,0 +1,12 @@
+[package]
+name = "main"
+version = "0.1.0"
+edition = "2024"
+
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+yew = {version = "0.21.0", features = ["csr"]}
+backend = { path="../backend"}
+web-sys = "0.3.82"
