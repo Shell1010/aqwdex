@@ -39,7 +39,7 @@ impl Stat {
 }
 
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize, Default)]
 pub enum EnhancementPattern {
     Adventurer,
     Fighter,
@@ -54,11 +54,11 @@ pub enum EnhancementPattern {
     Vim,
     Hearty,
     Examen,
-    Pneuma,
+    #[default] Pneuma,
     Anima,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Default)]
 pub struct Enhancement {
     pub level: u32,
     pub rarity: u32,

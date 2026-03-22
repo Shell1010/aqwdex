@@ -7,12 +7,11 @@ use crate::error::BackendError;
 use crate::gear::GearSlot;
 use crate::player;
 
-pub const MAX_LEVEL: u32 = 100;
-pub const X_FACTOR: u32 = 1640;
+pub const MAX_LEVEL: u32 = 100;pub const X_FACTOR: u32 = 1640;
 
-#[derive(Debug, PartialEq, Clone, Deserialize, Serialize, Copy)]
+#[derive(Debug, PartialEq, Clone, Deserialize, Serialize, Copy, Default)]
 pub enum ClassModel {
-    TankMelee,
+    #[default] TankMelee,
     DodgeMelee,
     PowerMelee,
     OffensiveCaster,
@@ -503,10 +502,19 @@ impl ClassModel {
 }
 
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Class {
     pub name: String,
     pub class_model: ClassModel,
+}
+
+impl Default for Class {
+    fn default() -> Self {
+        Class {
+            name: "Archfishy".to_string(),
+            class_model: ClassModel::default(),
+        }
+    }
 }
 
 impl Class {
@@ -518,7 +526,7 @@ impl Class {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct PrimaryStats {
     pub strength: i32,
     pub intellect: i32,
@@ -527,6 +535,24 @@ pub struct PrimaryStats {
     pub wisdom: i32,
     pub luck: i32,
 }
+
+impl std::ops::Add for PrimaryStats {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self {
+            strength:  self.strength  + other.strength,
+            intellect: self.intellect + other.intellect,
+            endurance: self.endurance + other.endurance,
+            dexterity: self.dexterity + other.dexterity,
+            wisdom:    self.wisdom    + other.wisdom,
+            luck:      self.luck      + other.luck,
+        }
+    }
+}
+
+
+
 impl PrimaryStats {
     pub fn new(strength: i32, intellect: i32, endurance: i32, dexterity: i32, wisdom: i32, luck: i32) -> Self {
         PrimaryStats {
@@ -549,7 +575,7 @@ impl PrimaryStats {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct SecondaryStats {
     pub phy_out: f32,
     pub phy_in: f32,
@@ -743,10 +769,17 @@ pub struct PlayerStats {
 }
 
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct Player {
-    level: u32,
+    pub level: u32,
 }
+
+impl Default for Player {
+    fn default() -> Self {
+        Player { level: 100 }
+    }
+}
+
 
 impl Player {
     pub fn new(level: u32) -> Self {
