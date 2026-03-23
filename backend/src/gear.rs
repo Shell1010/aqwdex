@@ -170,10 +170,10 @@ pub enum GearSlot {
 impl GearSlot {
     pub fn ratio(&self) -> f32 {
         match self {
-            GearSlot::Helm => 0.25,   // "he"
-            GearSlot::Armor => 0.25,  // "ar"
-            GearSlot::Cape => 0.20,   // "ba"
-            GearSlot::Weapon => 0.33, // "Weapon"
+            GearSlot::Helm => 0.25,
+            GearSlot::Armor => 0.25,
+            GearSlot::Cape => 0.20,
+            GearSlot::Weapon => 0.33,
         }
     }
 
@@ -243,8 +243,6 @@ pub fn get_stats(enh: &Enhancement, slot: GearSlot) -> PrimaryStats {
     let gear_stat_total = (gst_total_val * slot.ratio()).round() as i32;
 
     let ratios = enh.pattern.ratios();
-
-    // Base stat distribution (floored percentages)
     println!("STR: {}\nGST: {}\nRATIO: {}", gear_stat_total as f32 * ratios.str_ratio, gear_stat_total as f32, ratios.str_ratio);
     let mut stats = StatBlock {
         str_stat: (gear_stat_total as f32 * ratios.str_ratio).round() as i32,
@@ -258,8 +256,6 @@ pub fn get_stats(enh: &Enhancement, slot: GearSlot) -> PrimaryStats {
 
     let mut other_count = stats.sum();
     println!("Other count: {}", other_count);
-
-    // Fill remaining points to match the true GST total
     let mut index = 0;
     while other_count < gear_stat_total {
         match STATS_ORDER[index] {

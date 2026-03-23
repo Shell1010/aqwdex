@@ -29,7 +29,7 @@ impl FromStr for ClassModel {
             .to_lowercase()
             .replace(' ', "")
             .replace("_", "")
-            .replace("-", ""); // remove spaces and lowercase everything
+            .replace("-", "");
 
         match normalized.as_str() {
             "tankmelee" => Ok(ClassModel::TankMelee),

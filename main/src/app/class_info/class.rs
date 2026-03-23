@@ -4,6 +4,7 @@ use backend::{damage::{Weapon, WeaponBoost}, gear::{ Enhancement, EnhancementPat
 use yew::prelude::*;
 use crate::app::class_info::enhancement_picker::EnhancementPicker;
 use crate::app::class_info::stats::StatDisplay;
+use crate::app::class_info::skills::Skills;
 
 #[derive(Clone, PartialEq)]
 pub struct ClassSettings {
@@ -272,6 +273,7 @@ pub fn player_settings() -> Html {
             <StatDisplay settings={(*settings).clone()} />
 
             <hr />
+            <Skills settings={(*settings).clone()} />
             
         </div>
     }

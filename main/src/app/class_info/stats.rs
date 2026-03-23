@@ -60,7 +60,7 @@ pub fn stat_display(props: &StatProps) -> Html {
                 { for secondaries.into_iter().map(|(label, val)| html! {
                     <div class="stat-row">
                         <span class="label">{label}</span>
-                        <span class="value">{ format!("{:.2}%", val * 100.0) }</span>
+                        <span class="value">{ format!("{:.2}%", val) }</span>
                     </div>
                 })}
             </div>

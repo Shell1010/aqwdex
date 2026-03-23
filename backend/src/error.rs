@@ -10,4 +10,7 @@ pub enum BackendError {
 
     #[error("parse error: {0}")]
     ParseError(String),
+    
+    #[error("invalid damage source: {0}")]
+    InvalidDamageSource(String)
 }
