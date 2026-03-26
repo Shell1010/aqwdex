@@ -89,8 +89,8 @@ pub fn enhancement_picker(props: &PickerProps) -> Html {
                     on_input.emit((None, None, pat))
                 })
             }>
-                <option selected={props.enhancement.pattern == EnhancementPattern::Pneuma}>{"Adventurer"}</option>
-                <option selected={props.enhancement.pattern == EnhancementPattern::Pneuma}>{"Fighter"}</option>
+                <option selected={props.enhancement.pattern == EnhancementPattern::Adventurer}>{"Adventurer"}</option>
+                <option selected={props.enhancement.pattern == EnhancementPattern::Fighter}>{"Fighter"}</option>
                 <option selected={props.enhancement.pattern == EnhancementPattern::Anima}>{"Anima"}</option>
                 <option selected={props.enhancement.pattern == EnhancementPattern::Armsman}>{"Armsman"}</option>
                 <option selected={props.enhancement.pattern == EnhancementPattern::Hybrid}>{"Hybrid"}</option>

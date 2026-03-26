@@ -1,10 +1,12 @@
 use std::str::FromStr;
 
 use backend::{damage::{Weapon, WeaponBoost}, gear::{ Enhancement, EnhancementPattern, GearSlot, get_stats}, player::{Class, ClassModel, Player, PrimaryStats, SecondaryStats}};
+use gloo_console::log;
 use yew::prelude::*;
-use crate::app::class_info::enhancement_picker::EnhancementPicker;
+use crate::app::class_info::{enhancement_picker::EnhancementPicker, passive::{CustomPassive, OperationType, TargetType}};
 use crate::app::class_info::stats::StatDisplay;
 use crate::app::class_info::skills::Skills;
+use crate::app::class_info::passive::PassiveManager;
 
 #[derive(Clone, PartialEq)]
 pub struct ClassSettings {
@@ -14,6 +16,7 @@ pub struct ClassSettings {
     pub class: Class,
     pub primary_stats: PrimaryStats,
     pub secondary_stats: SecondaryStats,
+    pub passives: Vec<CustomPassive>
 }
 
 #[derive(Clone, PartialEq)]
@@ -30,16 +33,17 @@ impl Equipment {
         total.add(&get_stats(&self.cape, GearSlot::Cape));
         total.add(&get_stats(&self.weapon, GearSlot::Weapon));
         total.add(&get_stats(&self.class, GearSlot::Armor));
+        log!(total.strength);
         total
     }
 }
 
 impl Default for Equipment {
     fn default() -> Self {
-        Equipment { 
-            helm:  Enhancement { level: 100, rarity: 5, pattern: EnhancementPattern::Anima },
-            cape: Enhancement { level: 100, rarity: 5, pattern: EnhancementPattern::Forge },
-            weapon: Enhancement { level: 100, rarity: 5, pattern: EnhancementPattern::Fighter },
+        Equipment {
+            helm:  Enhancement { level: 100, rarity: 6, pattern: EnhancementPattern::Anima },
+            cape: Enhancement { level: 100, rarity: 6, pattern: EnhancementPattern::Forge },
+            weapon: Enhancement { level: 100, rarity: 6, pattern: EnhancementPattern::Forge },
             class: Enhancement { level: 100, rarity: 5, pattern: EnhancementPattern::Lucky },
         }
     }
@@ -51,18 +55,23 @@ impl Default for ClassSettings {
         let equipment = Equipment::default();
         let class = Class::default();
         let mut primary_stats = class.class_model.level_primary_stat_total(&player);
+        log!("strength before yes", primary_stats.strength);
+        log!(player.level);
+        log!(class.class_model.as_str());
         let equip_stats = equipment.total_stats();
         primary_stats.add(&equip_stats);
 
         ClassSettings {
-            level: Player::default(),
-            equipment: Equipment::default(),
+            level: player.clone(),
+            equipment: equipment.clone(),
             weapon: Weapon { range: 1.0, dps: 85.0, boost: backend::damage::WeaponBoost::Boost51x50 },
-            class: Class::default(),
+            class: class.clone(),
             primary_stats: primary_stats.clone(),
-            secondary_stats: class.class_model.secondary_stats_convert(&player, &primary_stats)
+            secondary_stats: class.class_model.secondary_stats_convert(&player, &primary_stats),
+            passives: vec![]
         }
     }
+
 }
 
 impl ClassSettings {
@@ -70,8 +79,189 @@ impl ClassSettings {
         let mut primary = self.class.class_model.level_primary_stat_total(&self.level);
         primary.add(&self.equipment.total_stats());
         
-        self.primary_stats = primary.clone();
-        self.secondary_stats = self.class.class_model.secondary_stats_convert(&self.level, &primary);
+        for passive in &self.passives {
+            match passive.target_type {
+                TargetType::Primary => {
+                    match passive.stat_name.as_str() {
+                        "Strength" => { 
+                            match passive.operation_type {
+                                OperationType::Additive => self.primary_stats.strength += passive.value as i32,
+                                OperationType::Multiplicative => {
+                                    let stat = self.primary_stats.strength;
+                                    self.primary_stats.strength = (stat as f32 * passive.value) as i32;
+                                }
+                            }
+                        },
+                        "Dexterity" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.primary_stats.dexterity += passive.value as i32,
+                                OperationType::Multiplicative => {
+                                    let stat = self.primary_stats.dexterity;
+                                    self.primary_stats.dexterity = (stat as f32 * passive.value) as i32;
+                                }
+                            }
+                        },
+                        "Wisdom" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.primary_stats.wisdom += passive.value as i32,
+                                OperationType::Multiplicative => self.primary_stats.wisdom *= {
+                                    let stat = self.primary_stats.wisdom as f32;
+                                    (stat * passive.value).round() as i32
+                                }
+                            }
+                        },
+                        "Intelligence" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.primary_stats.intellect += passive.value as i32,
+                                OperationType::Multiplicative => {
+                                    let stat = self.primary_stats.intellect as f32;
+                                    
+                                    self.primary_stats.intellect = (stat * passive.value).round() as i32;
+                                },
+                            }
+                        },
+                        "Endurance" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.primary_stats.endurance += passive.value as i32,
+                                OperationType::Multiplicative => {
+                                    let stat = self.primary_stats.endurance as f32;
+                                    
+                                    self.primary_stats.endurance = (stat * passive.value).round() as i32;
+                                }
+                            }
+                        },
+                        "Luck" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.primary_stats.luck += passive.value as i32,
+                                OperationType::Multiplicative => {
+                                    let stat = self.primary_stats.luck as f32;
+                                    
+                                    self.primary_stats.luck = (stat * passive.value).round() as i32;
+                                }
+                            }
+                        },
+                        _ => (),
+                    }
+                }
+                TargetType::Secondary => {
+                    match passive.stat_name.as_str() {
+                        "All Out" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.all_out += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.all_out *= passive.value,
+                            }
+                        },
+                        "All In" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.all_in += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.all_in *= passive.value,
+                            }
+                        },
+                        "Phy Out" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.phy_out += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.phy_out *= passive.value,
+                            }
+                        },
+                        "Phy In" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.phy_in += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.phy_in *= passive.value,
+                            }
+                        },
+                        "Mag Out" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.mag_out += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.mag_out *= passive.value,
+                            }
+                        },
+                        "Mag In" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.mag_in += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.mag_in *= passive.value,
+                            }
+                        },
+                        "Heal Out" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.heal_out += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.heal_out *= passive.value,
+                            }
+                        },
+                        "Heal In" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.heal_in += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.heal_in *= passive.value,
+                            }
+                        },
+                        "DoT Out" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.dot_out += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.dot_out *= passive.value,
+                            }
+                        },
+                        "DoT In" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.dot_in += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.dot_in *= passive.value,
+                            }
+                        },
+                        "Mana Consumption" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.mana_consumption += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.mana_consumption *= passive.value,
+                            }
+                        },
+                        "Attack Power" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.attack_power += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.attack_power *= passive.value,
+                            }
+                        },
+                        "Spell Power" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.spell_power += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.spell_power *= passive.value,
+                            }
+                        },
+                        "Hit Chance" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.hit_chance += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.hit_chance *= passive.value,
+                            }
+                        },
+                        "Haste" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.haste += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.haste *= passive.value,
+                            }
+                        },
+                        "Dodge Chance" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.dodge += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.dodge *= passive.value,
+                            }
+                        },
+                        "Crit Chance" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.crit_chance += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.crit_chance *= passive.value,
+                            }
+                        },
+                        "Crit Modifier" => {
+                            match passive.operation_type {
+                                OperationType::Additive => self.secondary_stats.crit_mod += passive.value,
+                                OperationType::Multiplicative => self.secondary_stats.crit_mod *= passive.value,
+                            }
+                        },
+                        
+                        _ => (),
+                        
+                    }
+                }
+            }
+        }
+        self.secondary_stats = self.class.class_model.secondary_stats_convert(&self.level, &self.primary_stats);
+        
     }
 }
 
@@ -85,7 +275,7 @@ pub fn player_settings() -> Html {
         Callback::from(move |e: InputEvent| {
             let input: web_sys::HtmlInputElement = e.target_unchecked_into();
             if let Ok(val) = input.value().parse::<u32>() {
-                
+
                 let mut new_s = (*settings).clone();
                 new_s.level.level = val;
                 new_s.refresh_stats();
@@ -93,13 +283,13 @@ pub fn player_settings() -> Html {
             }
         })
     };
-    
+
     let on_model_change = {
             let settings = settings.clone();
             Callback::from(move |e: Event| {
                 let select: web_sys::HtmlInputElement = e.target_unchecked_into();
                 let val = select.value();
-                
+
                 let mut new_s = (*settings).clone();
                 match ClassModel::from_str(&val) {
                     Ok(val) => new_s.class.class_model = val,
@@ -109,10 +299,10 @@ pub fn player_settings() -> Html {
                 settings.set(new_s);
             })
         };
-    
-        
+
+
         let models = vec!["Tank Melee", "Dodge Melee", "Power Melee", "Offensive Caster", "Defensive Caster", "Power Caster", "Luck Hybrid", "Full Hybrid"];
-    
+
     let make_callback = |slot_name: &'static str| {
         let settings = settings.clone();
         Callback::from(move |new_enh: Enhancement| {
@@ -128,7 +318,7 @@ pub fn player_settings() -> Html {
             settings.set(new_s);
         })
     };
-    
+
     let on_weapon_change = {
         let settings = settings.clone();
         Callback::from(move |(range, dps, boost): (Option<f32>, Option<f32>, Option<WeaponBoost>)| {
@@ -141,24 +331,38 @@ pub fn player_settings() -> Html {
         })
     };
     
-    
+    let on_add_passive = {
+        let settings = settings.clone();
+        
+        Callback::from(move | mut passives: Vec<CustomPassive> | {
+            let mut new_s = (*settings).clone();
+            new_s.passives.append(&mut passives);
+            new_s.refresh_stats();
+            settings.set(new_s);
+        
+        })
+        
+    };
+
+
 
     html! {
         <div class="class-config">
             <h2>{"Player Configuration"}</h2>
                 <div class="input-field">
                     <label>{"Level: "}</label>
-                    <input 
-                        type="number" 
-                        min="1" 
-                        max="100" 
-                        value={settings.level.level.to_string()} 
-                        oninput={on_level_input} 
+                    <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={settings.level.level.to_string()}
+                        oninput={on_level_input}
                     />
                 </div>
 
                 <div class="input-field">
                     <label>{"Class Model: "}</label>
+                    
                     <select onchange={on_model_change}>
                         { for models.into_iter().map(|m| {
                             html! { <option value={m}>{m}</option> }
@@ -166,57 +370,57 @@ pub fn player_settings() -> Html {
                     </select>
                 </div>
 
-                
+
                 <div class="enhancement-config">
-                    <EnhancementPicker 
-                        label="Helm" 
-                        enhancement={settings.equipment.helm.clone()} 
-                        on_change={make_callback("helm")} 
+                    <EnhancementPicker
+                        label="Helm"
+                        enhancement={settings.equipment.helm.clone()}
+                        on_change={make_callback("helm")}
                     />
-                    <EnhancementPicker 
-                        label="Cape" 
-                        enhancement={settings.equipment.cape.clone()} 
-                        on_change={make_callback("cape")} 
+                    <EnhancementPicker
+                        label="Cape"
+                        enhancement={settings.equipment.cape.clone()}
+                        on_change={make_callback("cape")}
                     />
-                    <EnhancementPicker 
-                        label="Weapon" 
-                        enhancement={settings.equipment.weapon.clone()} 
-                        on_change={make_callback("weapon")} 
+                    <EnhancementPicker
+                        label="Weapon"
+                        enhancement={settings.equipment.weapon.clone()}
+                        on_change={make_callback("weapon")}
                     />
-                    <EnhancementPicker 
-                        label="Class" 
-                        enhancement={settings.equipment.class.clone()} 
-                        on_change={make_callback("class")} 
+                    <EnhancementPicker
+                        label="Class"
+                        enhancement={settings.equipment.class.clone()}
+                        on_change={make_callback("class")}
                     />
                 </div>
                 <div class="weapon-config">
                     <h3>{"Weapon Metadata"}</h3>
-                    
+
                     <div class="input-grid">
                         <label>{"Range:"}</label>
-                        <input type="number" step="0.1" 
-                            value={settings.weapon.range.to_string()} 
+                        <input type="number" step="0.1"
+                            value={settings.weapon.range.to_string()}
                             oninput={
                                 let on_weapon_change = on_weapon_change.clone();
                                 Callback::from(move |e: InputEvent| {
                                     let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().ok();
                                     on_weapon_change.emit((val, None, None))
                                 })
-                            } 
+                            }
                         />
-                
+
                         <label>{"Weapon DPS:"}</label>
-                        <input type="number" step="0.1" 
-                            value={settings.weapon.dps.to_string()} 
+                        <input type="number" step="0.1"
+                            value={settings.weapon.dps.to_string()}
                             oninput={
                                 let on_weapon_change = on_weapon_change.clone();
                                 Callback::from(move |e: InputEvent| {
                                     let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().ok();
                                     on_weapon_change.emit((None, val, None))
                                 })
-                            } 
+                            }
                         />
-                
+
                         <label>{"Special Boost:"}</label>
                         <select onchange={
                             let on_weapon_change = on_weapon_change.clone();
@@ -251,7 +455,7 @@ pub fn player_settings() -> Html {
                                 html! {
                                     <>
                                         <label>{"Custom Multiplier:"}</label>
-                                        <input type="number" step="0.01" value={val.to_string()} 
+                                        <input type="number" step="0.01" value={val.to_string()}
                                             oninput={
                                                 let on_weapon_change = on_weapon_change.clone();
                                                 Callback::from(move |e: InputEvent| {
@@ -265,16 +469,17 @@ pub fn player_settings() -> Html {
                                     </>
                                 }
                             } else {
-                                html! {} 
+                                html! {}
                             }
                         }
                     </div>
                 </div>
             <StatDisplay settings={(*settings).clone()} />
+            <PassiveManager settings={(*settings).clone()} on_update_passives={on_add_passive} />
 
             <hr />
             <Skills settings={(*settings).clone()} />
-            
+
         </div>
     }
 }

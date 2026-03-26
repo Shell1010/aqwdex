@@ -11,6 +11,16 @@ pub struct Weapon {
     pub boost: WeaponBoost
 }
 
+impl Default for Weapon {
+    fn default() -> Self {
+        Self {
+            range: 1.0,
+            dps: 85.0,
+            boost: WeaponBoost::default(),
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Default)]
 #[allow(nonstandard_style)]
 pub enum DamageSource {
@@ -51,7 +61,7 @@ impl FromStr for DamageSource {
             .replace(' ', "")
             .replace("_", "")
             .replace("-", "");
-        
+
         match normalized.as_str() {
             "AP1" => Ok(DamageSource::AP1),
             "AP2" => Ok(DamageSource::AP2),
@@ -96,9 +106,9 @@ impl FromStr for WeaponBoost {
                     Ok(v) => Ok(WeaponBoost::Custom(1.0 + (v / 100.0))),
                     Err(e) => Err(BackendError::InvalidWeaponBoost(format!("Error: {e} ")))
                 }
-                
 
-            } 
+
+            }
         }
     }
 }
@@ -125,12 +135,27 @@ pub enum Type {
     DamageOverTime,
 }
 
+impl FromStr for Type {
+    type Err = BackendError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Physical" => Ok(Type::Physical),
+            "Magical" => Ok(Type::Magical),
+            "TrueDamage" => Ok(Type::TrueDamage),
+            "DamageOverTime" => Ok(Type::DamageOverTime),
+            e => Err(BackendError::InvalidDamageType(format!("Error: {e} ")))
+        }
+    }
+}
+
+
 impl Type {
     pub fn self_modifiers(&self, stat: &SecondaryStats, crit: bool) -> f32 {
         let crit_mod = if crit { stat.crit_mod } else { 100.0 };
 
         match self {
-            Type::Physical => (stat.all_out / 100.0) * (stat.phy_out / 100.0) * (crit_mod / 100.0),
+            Type::Physical => { println!("{} --- {} --- {}", (stat.all_out / 100.0), (stat.phy_out / 100.0), (crit_mod / 100.0)); (stat.all_out / 100.0) * (stat.phy_out / 100.0) * (crit_mod / 100.0) },
             Type::Magical => (stat.all_out / 100.0) * (stat.mag_out / 100.0) * (crit_mod / 100.0),
             Type::TrueDamage => 1.0 * (crit_mod / 100.0),
             // This isn't proper I'm just lazy
@@ -167,6 +192,7 @@ pub struct Properties {
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct Skill {
+    pub damage: f32,
     pub dsrc: DamageSource,
     pub damage_type: Type,
     pub cd: u32,
@@ -179,13 +205,15 @@ impl Skill {
     pub fn compute(&self, weapon: &Weapon, secondary: &SecondaryStats, crit: bool) -> f32 {
         let type_final_modifier = &self.damage_type.self_modifiers(secondary, crit);
         let dsrc_value = &self.dsrc.compute(weapon, secondary);
-        dsrc_value * type_final_modifier * weapon.boost.multiplier()
+        println!("{} --- {} --- {}", dsrc_value, type_final_modifier, weapon.boost.multiplier());
+        dsrc_value * type_final_modifier * weapon.boost.multiplier() * self.damage
     }
 }
 
 impl Default for Skill {
     fn default() -> Self {
         Skill {
+            damage: 1.0,
             dsrc: DamageSource::AP1,
             damage_type: Type::Physical,
             cd: 0,
@@ -199,4 +227,41 @@ impl Default for Skill {
             },
         }
     }
+}
+
+
+
+#[test]
+fn test_skill_compute() {
+    let skill = Skill::default();
+    let weapon = Weapon::default();
+    let secondary = SecondaryStats {
+        phy_out: 100.0,
+        phy_in: 100.0,
+        mag_out: 176.0,
+        mag_in: 100.0 - 76.0,
+        all_in: 100.0,
+        all_out: 100.0,
+        heal_in: 100.0,
+        heal_out: 100.0,
+        dot_in: 100.0,
+        dot_out: 100.0,
+        crit_chance: 50.0,
+        attack_power: 1400.0,
+        spell_power: 1400.0,
+        mana_consumption: 100.0,
+        current_hp: 100,
+        hp: 100,
+        current_mp: 100,
+        dodge: 86.3,
+        haste: 50.0,
+        mp: 100,
+        hit_chance: 100.0,
+        crit_mod: 150.0,
+    };
+    let crit = false;
+
+    let result = skill.compute(&weapon, &secondary, crit);
+    println!("RESULT OF DMG: {}", result );
+    assert!(result > 0.0);
 }

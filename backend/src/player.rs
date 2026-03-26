@@ -11,13 +11,13 @@ pub const MAX_LEVEL: u32 = 100;pub const X_FACTOR: u32 = 1640;
 
 #[derive(Debug, PartialEq, Clone, Deserialize, Serialize, Copy, Default)]
 pub enum ClassModel {
-    #[default] TankMelee,
+    TankMelee,
     DodgeMelee,
     PowerMelee,
     OffensiveCaster,
     DefensiveCaster,
     PowerCaster,
-    FullHybrid,
+    #[default] FullHybrid,
     LuckHybrid,
 }
 
@@ -66,77 +66,79 @@ impl ClassModel {
     }
 
     pub fn level_interstat_total(&self, player: &Player) -> i32 {
-        (747/99) * (player.level as i32 - 1) + 15
+        
+        15+((player.level as i32 - 1)/(100-1))*747
     }
 
     pub fn level_primary_stat_total(&self, player: &Player) -> PrimaryStats {
         let list = self.level_interstat_total(player);
+        println!("LIST as F32: {}", (list as f32 * 0.24).round() as i32 );
         match self {
             ClassModel::TankMelee => PrimaryStats {
-                strength: (list as f32 * 0.27) as i32,
-                intellect: (list as f32 * 0.05) as i32,
-                dexterity: (list as f32 * 0.22) as i32,
-                endurance: (list as f32 * 0.3) as i32,
-                wisdom: (list as f32 * 0.1) as i32,
-                luck: (list as f32 * 0.06) as i32,
+                strength: (list as f32 * 0.27).round() as i32,
+                intellect: (list as f32 * 0.05).round() as i32,
+                dexterity: (list as f32 * 0.22).round() as i32,
+                endurance: (list as f32 * 0.3).round() as i32,
+                wisdom: (list as f32 * 0.1).round() as i32,
+                luck: (list as f32 * 0.06).round() as i32,
             },
             ClassModel::DodgeMelee => PrimaryStats {
-                strength: (list as f32 * 0.2) as i32,
-                intellect: (list as f32 * 0.05) as i32,
-                dexterity: (list as f32 * 0.33) as i32,
-                endurance: (list as f32 * 0.22) as i32,
-                wisdom: (list as f32 * 0.1) as i32,
-                luck: (list as f32 * 0.1) as i32,
+                strength: (list as f32 * 0.2).round() as i32,
+                intellect: (list as f32 * 0.05).round() as i32,
+                dexterity: (list as f32 * 0.33).round() as i32,
+                endurance: (list as f32 * 0.22).round() as i32,
+                wisdom: (list as f32 * 0.1).round() as i32,
+                luck: (list as f32 * 0.1).round() as i32,
             },
             ClassModel::PowerMelee => PrimaryStats {
-                strength: (list as f32 * 0.3) as i32,
-                intellect: (list as f32 * 0.02) as i32,
-                dexterity: (list as f32 * 0.3) as i32,
-                endurance: (list as f32 * 0.18) as i32,
-                wisdom: (list as f32 * 0.06) as i32,
-                luck: (list as f32 * 0.14) as i32,
+                strength: (list as f32 * 0.3).round() as i32,
+                intellect: (list as f32 * 0.02).round() as i32,
+                dexterity: (list as f32 * 0.3).round() as i32,
+                endurance: (list as f32 * 0.18).round() as i32,
+                wisdom: (list as f32 * 0.06).round() as i32,
+                luck: (list as f32 * 0.14).round() as i32,
             },
             ClassModel::OffensiveCaster => PrimaryStats {
-                strength: (list as f32 * 0.06) as i32,
-                intellect: (list as f32 * 0.33) as i32,
-                dexterity: (list as f32 * 0.11) as i32,
-                endurance: (list as f32 * 0.2) as i32,
-                wisdom: (list as f32 * 0.15) as i32,
-                luck: (list as f32 * 0.15) as i32,
+                strength: (list as f32 * 0.06).round() as i32,
+                intellect: (list as f32 * 0.33).round() as i32,
+                dexterity: (list as f32 * 0.11).round() as i32,
+                endurance: (list as f32 * 0.2).round() as i32,
+                wisdom: (list as f32 * 0.15).round() as i32,
+                luck: (list as f32 * 0.15).round() as i32,
             },
             ClassModel::DefensiveCaster => PrimaryStats {
-                strength: (list as f32 * 0.08) as i32,
-                intellect: (list as f32 * 0.3) as i32,
-                dexterity: (list as f32 * 0.1) as i32,
-                endurance: (list as f32 * 0.27) as i32,
-                wisdom: (list as f32 * 0.1) as i32,
-                luck: (list as f32 * 0.15) as i32,
+                strength: (list as f32 * 0.08).round() as i32,
+                intellect: (list as f32 * 0.3).round() as i32,
+                dexterity: (list as f32 * 0.1).round() as i32,
+                endurance: (list as f32 * 0.27).round() as i32,
+                wisdom: (list as f32 * 0.1).round() as i32,
+                luck: (list as f32 * 0.15).round() as i32,
             },
             ClassModel::PowerCaster => PrimaryStats {
-                strength: (list as f32 * 0.06) as i32,
-                intellect: (list as f32 * 0.28) as i32,
-                dexterity: (list as f32 * 0.05) as i32,
-                endurance: (list as f32 * 0.23) as i32,
-                wisdom: (list as f32 * 0.28) as i32,
-                luck: (list as f32 * 0.1) as i32,
+                strength: (list as f32 * 0.06).round() as i32,
+                intellect: (list as f32 * 0.28).round() as i32,
+                dexterity: (list as f32 * 0.05).round() as i32,
+                endurance: (list as f32 * 0.23).round() as i32,
+                wisdom: (list as f32 * 0.28).round() as i32,
+                luck: (list as f32 * 0.1).round() as i32,
             },
             ClassModel::FullHybrid => PrimaryStats {
-                strength: (list as f32 * 0.24) as i32,
-                intellect: (list as f32 * 0.24) as i32,
-                dexterity: (list as f32 * 0.2) as i32,
-                endurance: (list as f32 * 0.2) as i32,
-                wisdom: (list as f32 * 0.07) as i32,
-                luck: (list as f32 * 0.05) as i32,
+                strength: (list as f32 * 0.24).round() as i32,
+                intellect: (list as f32 * 0.24).round() as i32,
+                dexterity: (list as f32 * 0.2).round() as i32,
+                endurance: (list as f32 * 0.2).round() as i32,
+                wisdom: (list as f32 * 0.07).round() as i32,
+                luck: (list as f32 * 0.05).round() as i32,
             },
             ClassModel::LuckHybrid => PrimaryStats {
-                strength: (list as f32 * 0.22) as i32,
-                intellect: (list as f32 * 0.08) as i32,
-                dexterity: (list as f32 * 0.21) as i32,
-                endurance: (list as f32 * 0.18) as i32,
-                wisdom: (list as f32 * 0.08) as i32,
-                luck: (list as f32 * 0.23) as i32,
+                strength: (list as f32 * 0.22).round() as i32,
+                intellect: (list as f32 * 0.08).round() as i32,
+                dexterity: (list as f32 * 0.21).round() as i32,
+                endurance: (list as f32 * 0.18).round() as i32,
+                wisdom: (list as f32 * 0.08).round() as i32,
+                luck: (list as f32 * 0.23).round() as i32,
             }
-            
+
         }
     }
 
@@ -153,26 +155,26 @@ impl ClassModel {
         }
     }
 
-    pub fn phy_out_convert(&self) -> f32 { 0.0 }
+    pub fn phy_out_convert(&self) -> f32 { 100.0 }
 
-    pub fn phy_in_convert(&self) -> f32 { 0.0 }
+    pub fn phy_in_convert(&self) -> f32 { 100.0 }
 
-    pub fn heal_out_convert(&self) -> f32 { 0.0 }
+    pub fn heal_out_convert(&self) -> f32 { 100.0 }
 
-    pub fn heal_in_convert(&self) -> f32 { 0.0 }
+    pub fn heal_in_convert(&self) -> f32 { 100.0 }
 
-    pub fn dot_out_convert(&self) -> f32 { 0.0 }
+    pub fn dot_out_convert(&self) -> f32 { 100.0 }
 
-    pub fn dot_in_convert(&self) -> f32 { 0.0 }
+    pub fn dot_in_convert(&self) -> f32 { 100.0 }
 
-    pub fn all_out_convert(&self) -> f32 { 0.0 }
+    pub fn all_out_convert(&self) -> f32 { 100.0 }
 
-    pub fn all_in_convert(&self) -> f32 { 0.0 }
+    pub fn all_in_convert(&self) -> f32 { 100.0 }
 
-    pub fn mana_consumption_convert(&self) -> f32 { 0.0 }
+    pub fn mana_consumption_convert(&self) -> f32 { 100.0 }
 
-    pub fn attack_power_convert(&self, _player: &Player, primary: &PrimaryStats) -> f32 { 
-        
+    pub fn attack_power_convert(&self, _player: &Player, primary: &PrimaryStats) -> f32 {
+
         match self {
             ClassModel::TankMelee => {
                 let str_ap = (primary.strength * 2) as f32;
@@ -212,7 +214,7 @@ impl ClassModel {
 
     }
 
-    pub fn spell_power_convert(&self, _player: &Player, primary: &PrimaryStats) -> f32 { 
+    pub fn spell_power_convert(&self, _player: &Player, primary: &PrimaryStats) -> f32 {
         match self {
             ClassModel::TankMelee => {
                 primary.intellect as f32 * 2.0
@@ -251,108 +253,108 @@ impl ClassModel {
         }
     }
 
-    pub fn crit_chance_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 { 
+    pub fn crit_chance_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 {
         match self {
             ClassModel::TankMelee => {
                 let str_crit = (primary.strength as f32) * 0.4 * player.efficiency();
                 let luk_crit = (primary.luck as f32) * 0.2 * player.efficiency();
-                str_crit + luk_crit
+                str_crit + luk_crit + 5.0
             },
             ClassModel::DodgeMelee => {
                 let str_crit = (primary.strength as f32) * 0.4 * player.efficiency();
                 let luk_crit = (primary.luck as f32) * 0.2 * player.efficiency();
-                str_crit + luk_crit
+                str_crit + luk_crit + 5.0
             },
             ClassModel::PowerMelee => {
                 let str_crit = (primary.strength as f32) * 0.7 * player.efficiency();
                 let luk_crit = (primary.luck as f32) * 0.2 * player.efficiency();
-                str_crit + luk_crit
+                str_crit + luk_crit + 5.0
             },
             ClassModel::DefensiveCaster => {
                 let wis_crit = (primary.wisdom as f32) * 0.4 * player.efficiency();
                 let luk_crit = (primary.luck as f32) * 0.2 * player.efficiency();
-                wis_crit + luk_crit
+                wis_crit + luk_crit + 5.0
             },
             ClassModel::OffensiveCaster => {
                 let wis_crit = (primary.wisdom as f32) * 0.7 * player.efficiency();
                 let luk_crit = (primary.luck as f32) * 0.2 * player.efficiency();
-                wis_crit + luk_crit
+                wis_crit + luk_crit + 5.0
             },
             ClassModel::PowerCaster => {
                 let wis_crit = (primary.wisdom as f32) * 0.4 * player.efficiency();
                 let luk_crit = (primary.luck as f32) * 0.2 * player.efficiency();
-                wis_crit + luk_crit
+                wis_crit + luk_crit + 5.0
             },
             ClassModel::FullHybrid => {
                 let str_crit = (primary.strength as f32) * 0.4 * player.efficiency();
                 let luk_crit = (primary.luck as f32) * 0.2 * player.efficiency();
-                str_crit + luk_crit
+                str_crit + luk_crit + 5.0
             },
             ClassModel::LuckHybrid => {
                 let str_crit = (primary.strength as f32) * 0.4 * player.efficiency();
                 let wis_crit = (primary.wisdom as f32) * 0.4 * player.efficiency();
                 let luk_crit = (primary.luck as f32) * 0.3 * player.efficiency();
-                str_crit + wis_crit + luk_crit
+                str_crit + wis_crit + luk_crit + 5.0
             }
         }
     }
 
-    pub fn mag_in_convert(&self, player: &Player, primary: &PrimaryStats ) -> f32 { 
+    pub fn mag_in_convert(&self, player: &Player, primary: &PrimaryStats ) -> f32 {
         match self {
             _ => {
                 let int_mag_in = (primary.intellect as f32) * -1.0 * player.efficiency();
-                int_mag_in
+                int_mag_in + 100.0
             }
         }
     }
 
-    pub fn hit_chance_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 { 
+    pub fn hit_chance_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 {
         match self {
             ClassModel::TankMelee => {
                 let dex_hit = (primary.dexterity as f32) * 0.2 * player.efficiency();
                 let luk_hit = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_hit + luk_hit
+                dex_hit + luk_hit + 90.0
             },
             ClassModel::DodgeMelee => {
                 let dex_hit = (primary.dexterity as f32) * 0.2 * player.efficiency();
                 let luk_hit = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_hit + luk_hit
+                dex_hit + luk_hit + 90.0
             },
             ClassModel::PowerMelee => {
                 let dex_hit = (primary.dexterity as f32) * 0.2 * player.efficiency();
                 let luk_hit = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_hit + luk_hit
+                dex_hit + luk_hit + 90.0
             },
             ClassModel::DefensiveCaster => {
                 let wis_hit = (primary.wisdom as f32) * 0.2 * player.efficiency();
                 let luk_hit = (primary.luck as f32) * 0.1 * player.efficiency();
-                wis_hit + luk_hit
+                wis_hit + luk_hit + 90.0
             },
             ClassModel::OffensiveCaster => {
                 let wis_hit = (primary.wisdom as f32) * 0.2 * player.efficiency();
                 let luk_hit = (primary.luck as f32) * 0.1 * player.efficiency();
-                wis_hit + luk_hit
+                wis_hit + luk_hit + 90.0
             },
             ClassModel::PowerCaster => {
                 let wis_hit = (primary.wisdom as f32) * 0.2 * player.efficiency();
                 let luk_hit = (primary.luck as f32) * 0.1 * player.efficiency();
-                wis_hit + luk_hit
+                wis_hit + luk_hit + 90.0
             },
             ClassModel::FullHybrid => {
                 let dex_hit = (primary.dexterity as f32) * 0.2 * player.efficiency();
                 let luk_hit = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_hit + luk_hit
+                dex_hit + luk_hit + 90.0
             },
             ClassModel::LuckHybrid => {
                 let dex_hit = (primary.dexterity as f32) * 0.2 * player.efficiency();
                 let wis_hit = (primary.wisdom as f32) * 0.2 * player.efficiency();
                 let luk_hit = (primary.luck as f32) *   0.1 * player.efficiency();
-                dex_hit + luk_hit + wis_hit
+                dex_hit + luk_hit + wis_hit + 90.0
             }
         }
     }
 
-    pub fn haste_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 { 
+    pub fn haste_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 {
         match self {
             ClassModel::TankMelee => {
                 let dex_haste = (primary.dexterity as f32) * 0.3 * player.efficiency();
@@ -399,78 +401,79 @@ impl ClassModel {
         }
     }
 
-    pub fn crit_mod_convert(&self) -> f32 { 
+    pub fn crit_mod_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 {
         match self {
-            ClassModel::LuckHybrid => 2.5,
-            _ => 5.0,
+            ClassModel::LuckHybrid => ((primary.luck as f32) * 2.5 * player.efficiency()) + 150.0,
+            _ => ((primary.luck as f32) * 5.0 * player.efficiency()) + 150.0,
         }
-        
-    }
-    
 
-    pub fn dodge_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 { 
+    }
+
+
+    pub fn dodge_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 {
         match self {
             ClassModel::TankMelee => {
                 let dex_dodge = (primary.dexterity as f32) * 0.3 * player.efficiency();
                 let wis_dodge = (primary.wisdom as f32) * 0.3 * player.efficiency();
                 let luk_dodge = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_dodge + luk_dodge + wis_dodge
+                dex_dodge + luk_dodge + wis_dodge + 4.0
             },
             ClassModel::DodgeMelee => {
                 let dex_dodge = (primary.dexterity as f32) * 0.5 * player.efficiency();
                 let wis_dodge = (primary.wisdom as f32) * 0.3 * player.efficiency();
                 let luk_dodge = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_dodge + luk_dodge + wis_dodge
+                dex_dodge + luk_dodge + wis_dodge + 4.0
             },
             ClassModel::PowerMelee => {
                 let dex_dodge = (primary.dexterity as f32) * 0.5 * player.efficiency();
                 let wis_dodge = (primary.wisdom as f32) * 0.3 * player.efficiency();
                 let luk_dodge = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_dodge + luk_dodge + wis_dodge
-            },
+                dex_dodge + luk_dodge + wis_dodge + 4.0
+            }, 
             ClassModel::DefensiveCaster => {
                 let dex_dodge = (primary.dexterity as f32) * 0.3 * player.efficiency();
                 let wis_dodge = (primary.wisdom as f32) * 0.3 * player.efficiency();
                 let luk_dodge = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_dodge + luk_dodge + wis_dodge
+                dex_dodge + luk_dodge + wis_dodge + 4.0
             },
             ClassModel::OffensiveCaster => {
                 let dex_dodge = (primary.dexterity as f32) * 0.3 * player.efficiency();
                 let wis_dodge = (primary.wisdom as f32) * 0.3 * player.efficiency();
                 let luk_dodge = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_dodge + luk_dodge + wis_dodge
+                dex_dodge + luk_dodge + wis_dodge + 4.0
             },
             ClassModel::PowerCaster => {
                 let dex_dodge = (primary.dexterity as f32) * 0.3 * player.efficiency();
                 let wis_dodge = (primary.wisdom as f32) * 0.3 * player.efficiency();
                 let luk_dodge = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_dodge + luk_dodge + wis_dodge
+                dex_dodge + luk_dodge + wis_dodge + 4.0
             },
             ClassModel::FullHybrid => {
                 let dex_dodge = (primary.dexterity as f32) * 0.5 * player.efficiency();
                 let wis_dodge = (primary.wisdom as f32) * 0.3 * player.efficiency();
                 let luk_dodge = (primary.luck as f32) * 0.1 * player.efficiency();
-                dex_dodge + luk_dodge + wis_dodge
+                dex_dodge + luk_dodge + wis_dodge + 4.0
             },
             ClassModel::LuckHybrid => {
                 let dex_dodge = (primary.dexterity as f32) * 0.3 * player.efficiency();
                 let wis_dodge = (primary.wisdom as f32) * 0.3 * player.efficiency();
                 let luk_dodge = (primary.luck as f32) * 0.25 * player.efficiency();
-                dex_dodge + luk_dodge + wis_dodge
+                dex_dodge + luk_dodge + wis_dodge + 4.0
             }
         }
     }
-    fn mag_out_convert(&self, player: &Player, primary: &PrimaryStats ) -> f32 { 
+    fn mag_out_convert(&self, player: &Player, primary: &PrimaryStats ) -> f32 {
         match self {
             ClassModel::DefensiveCaster | ClassModel::OffensiveCaster | &ClassModel::PowerCaster | ClassModel::FullHybrid => {
                 let int_mag_out = (primary.intellect as f32) * 1.0 * player.efficiency();
-                int_mag_out
+                int_mag_out + 100.0
             },
-            _ => 0.0,
+            _ => 100.0,
         }
     }
     pub fn secondary_stats_convert(&self, player: &Player, primary: &PrimaryStats) -> SecondaryStats {
         let hp = player.base_hp() + (primary.endurance as i32 * 5) as i32;
+        println!("BASE HP: {}", hp);
         SecondaryStats {
             phy_out: self.phy_out_convert(),
             phy_in: self.phy_in_convert(),
@@ -483,7 +486,7 @@ impl ClassModel {
             all_in: self.all_in_convert(),
             all_out: self.all_out_convert(),
             crit_chance: self.crit_chance_convert(player, primary),
-            crit_mod: self.crit_mod_convert(),
+            crit_mod: self.crit_mod_convert(player, primary),
             mana_consumption: self.mana_consumption_convert(),
             haste: self.haste_convert(player, primary),
             dodge: self.dodge_convert(player, primary),
@@ -498,7 +501,7 @@ impl ClassModel {
         }
     }
 
-    
+
 }
 
 
@@ -615,7 +618,7 @@ impl SecondaryStats {
             all_in: 100.0,
             all_out: 100.0,
             crit_chance: 5.0,
-            crit_mod: 150.0,
+            crit_mod: 200.0,
             mana_consumption: 0.0,
             haste: 0.0,
             dodge: 4.0,
@@ -802,9 +805,9 @@ mod tests {
     #[test]
     fn test_level_primary_stat_total() {
         let player = Player::new(100);
-        let class_model = ClassModel::TankMelee;
+        let class_model = ClassModel::FullHybrid;
         let primary_stats = class_model.level_primary_stat_total(&player);
-        println!("Primary Stats at level 50 for Tank Melee: {:?}", primary_stats);
+        println!("Primary Stats at level 100 for Hybrid Melee: {:?}", primary_stats);
 
     }
 }
