@@ -371,7 +371,6 @@ pub fn player_settings() -> Html {
         })
     };
     
-    let load_count = use_state(|| 0);
     
     let on_load_build = {
         let settings = settings.clone();
@@ -385,7 +384,7 @@ pub fn player_settings() -> Html {
 
 
     html! {
-        <div class="class-config" key={*load_count}>
+        <div class="class-config">
             <h2>{"Player Configuration"}</h2>
                 <div class="input-field">
                     <label>{"Build Name: "}</label>
