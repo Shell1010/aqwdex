@@ -10,7 +10,6 @@ pub struct BuildManagerProps {
 
 #[function_component(BuildManager)]
 pub fn build_manager(props: &BuildManagerProps) -> Html {
-    let save_name = use_state(|| "".to_string());
     let selected_load = use_state(|| "".to_string());
 
     let saved_names = use_state(|| {
