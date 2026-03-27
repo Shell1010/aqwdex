@@ -84,7 +84,8 @@ pub fn enhancement_picker(props: &PickerProps) -> Html {
                         "Examen" => Some(EnhancementPattern::Examen),
                         "Hearty" => Some(EnhancementPattern::Hearty),
                         "Pneuma" => Some(EnhancementPattern::Pneuma),
-                        _ => Some(EnhancementPattern::Lucky),
+                        "Anima" => Some(EnhancementPattern::Anima),
+                        _ => None,
                     };
                     on_input.emit((None, None, pat))
                 })

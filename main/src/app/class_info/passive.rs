@@ -1,19 +1,20 @@
+use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use crate::app::class_info::class::ClassSettings;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub enum TargetType {
     Primary,
     Secondary,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub enum OperationType {
     Multiplicative,
     Additive,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct CustomPassive {
     pub target_type: TargetType,
     pub stat_name: String,
@@ -64,7 +65,7 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
 
     html! {
         <div class="passive-manager">
-            <h4>{"Custom Passives Workbench"}</h4>
+            <h4>{"Passives"}</h4>
             <table class="passive-table">
                 <thead>
                     <tr>
