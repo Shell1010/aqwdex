@@ -233,34 +233,43 @@ impl Default for Skill {
 
 #[test]
 fn test_skill_compute() {
-    let skill = Skill::default();
+    let skill = Skill {
+        damage: 1.1,
+        dsrc: DamageSource::AP2,
+        damage_type: Type::Physical,
+        cd: 1000,
+        mp: 0,
+        target: Target::Enemy,
+        properties: Properties { force_result: None, add_crit: None, mana_back: None, hp_back: None }
+        
+    };
     let weapon = Weapon::default();
     let secondary = SecondaryStats {
         phy_out: 100.0,
         phy_in: 100.0,
-        mag_out: 176.0,
-        mag_in: 100.0 - 76.0,
+        mag_out: 138.35,
+        mag_in: 100.0 - 38.35,
         all_in: 100.0,
-        all_out: 100.0,
+        all_out: 120.0,
         heal_in: 100.0,
         heal_out: 100.0,
         dot_in: 100.0,
         dot_out: 100.0,
-        crit_chance: 50.0,
-        attack_power: 1400.0,
-        spell_power: 1400.0,
+        crit_chance: 56.44,
+        attack_power: 1156.0,
+        spell_power: 798.0,
         mana_consumption: 100.0,
-        current_hp: 100,
-        hp: 100,
+        current_hp: 2310,
+        hp: 2310,
         current_mp: 100,
-        dodge: 86.3,
-        haste: 50.0,
+        dodge: 23.87,
+        haste: 32.72,
         mp: 100,
-        hit_chance: 100.0,
-        crit_mod: 150.0,
+        hit_chance: 118.63,
+        crit_mod: 323.97,
     };
     let crit = false;
-
+    // 1202 (3894 crit)
     let result = skill.compute(&weapon, &secondary, crit);
     println!("RESULT OF DMG: {}", result );
     assert!(result > 0.0);

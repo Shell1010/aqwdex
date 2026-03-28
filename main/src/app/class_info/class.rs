@@ -9,7 +9,7 @@ use crate::app::class_info::skills::Skills;
 use crate::app::class_info::passive::PassiveManager;
 use serde::{Serialize, Deserialize};
 
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub struct ClassSettings {
     pub name: String,
     pub level: Player,
@@ -21,7 +21,7 @@ pub struct ClassSettings {
     pub passives: Vec<CustomPassive>
 }
 
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub struct Equipment {
     pub helm: Enhancement,
     pub cape: Enhancement,
@@ -35,7 +35,7 @@ impl Equipment {
         total.add(&get_stats(&self.cape, GearSlot::Cape));
         total.add(&get_stats(&self.weapon, GearSlot::Weapon));
         total.add(&get_stats(&self.class, GearSlot::Armor));
-        log!(total.strength);
+        
         total
     }
 }
@@ -57,9 +57,6 @@ impl Default for ClassSettings {
         let equipment = Equipment::default();
         let class = Class::default();
         let mut primary_stats = class.class_model.level_primary_stat_total(&player);
-        log!("strength before yes", primary_stats.strength);
-        log!(player.level);
-        log!(class.class_model.as_str());
         let equip_stats = equipment.total_stats();
         primary_stats.add(&equip_stats);
 
@@ -165,7 +162,7 @@ impl ClassSettings {
                         },
                         "All In" => {
                             match passive.operation_type {
-                                OperationType::Additive => secondary_stats.all_in += passive.value,
+                                OperationType::Additive => secondary_stats.all_in -= passive.value,
                                 OperationType::Multiplicative => secondary_stats.all_in *= passive.value,
                             }
                         },
@@ -177,7 +174,7 @@ impl ClassSettings {
                         },
                         "Phy In" => {
                             match passive.operation_type {
-                                OperationType::Additive => secondary_stats.phy_in += passive.value,
+                                OperationType::Additive => secondary_stats.phy_in -= passive.value,
                                 OperationType::Multiplicative => secondary_stats.phy_in *= passive.value,
                             }
                         },
@@ -189,7 +186,7 @@ impl ClassSettings {
                         },
                         "Mag In" => {
                             match passive.operation_type {
-                                OperationType::Additive => secondary_stats.mag_in += passive.value,
+                                OperationType::Additive => secondary_stats.mag_in -= passive.value,
                                 OperationType::Multiplicative => secondary_stats.mag_in *= passive.value,
                             }
                         },
@@ -201,7 +198,7 @@ impl ClassSettings {
                         },
                         "Heal In" => {
                             match passive.operation_type {
-                                OperationType::Additive => secondary_stats.heal_in += passive.value,
+                                OperationType::Additive => secondary_stats.heal_in -= passive.value,
                                 OperationType::Multiplicative => secondary_stats.heal_in *= passive.value,
                             }
                         },
@@ -213,7 +210,7 @@ impl ClassSettings {
                         },
                         "DoT In" => {
                             match passive.operation_type {
-                                OperationType::Additive => secondary_stats.dot_in += passive.value,
+                                OperationType::Additive => secondary_stats.dot_in -= passive.value,
                                 OperationType::Multiplicative => secondary_stats.dot_in *= passive.value,
                             }
                         },
@@ -371,20 +368,25 @@ pub fn player_settings() -> Html {
         })
     };
     
+    let load_count = use_state(|| 0);
     
     let on_load_build = {
         let settings = settings.clone();
+        let load_count = load_count.clone();
         Callback::from(move |mut loaded_settings: ClassSettings| {
             
             loaded_settings.refresh_stats();
-            settings.set(loaded_settings)
+            log!(format!("{:?}", loaded_settings));
+            load_count.set(*load_count + 1);
+            settings.set(loaded_settings);
+            
         })
     };
 
 
 
     html! {
-        <div class="class-config">
+        <div class="class-config" key={*load_count}>
             <h2>{"Player Configuration"}</h2>
                 <div class="input-field">
                     <label>{"Build Name: "}</label>

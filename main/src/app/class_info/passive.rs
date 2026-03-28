@@ -2,19 +2,19 @@ use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use crate::app::class_info::class::ClassSettings;
 
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub enum TargetType {
     Primary,
     Secondary,
 }
 
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub enum OperationType {
     Multiplicative,
     Additive,
 }
 
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub struct CustomPassive {
     pub target_type: TargetType,
     pub stat_name: String,

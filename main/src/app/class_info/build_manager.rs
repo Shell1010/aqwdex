@@ -59,27 +59,66 @@ pub fn build_manager(props: &BuildManagerProps) -> Html {
         })
     };
 
+    let on_delete = {
+        let selected_load = selected_load.clone();
+        let saved_names = saved_names.clone();
+
+        Callback::from(move |_| {
+            let name = (*selected_load).clone();
+            if name.is_empty() { return; }
+
+            let mut builds = load_all_builds();
+            builds.remove(&name); // Remove from HashMap
+            save_all_builds(&builds);
+            let mut names: Vec<String> = builds.keys().cloned().collect();
+            names.sort();
+            saved_names.set(names);
+            selected_load.set("".to_string());
+        })
+    };
+
     html! {
         <div class="build-manager">
-            <h4>{"Save / Load Builds"}</h4>
-            <button class="save-btn" onclick={on_save}>{"Save Build"}</button>
+            <h4>{"Build Management"}</h4>
+            <div class="build-actions">
+                <button class="save-btn" onclick={on_save}>{"Save Current Build"}</button>
+            </div>
 
             <div class="input-field">
-                <label>{"Load Saved Build: "}</label>
+                <label>{"Manage Builds: "}</label>
                 <div class="form-row">
-                    <select onchange={
-                        let selected_load = selected_load.clone();
-                        Callback::from(move |e: Event| {
-                            let select = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                            selected_load.set(select.value());
-                        })
-                    }>
-                        <option value="">{"-- Select --"}</option>
+                    <select 
+                        value={(*selected_load).clone()}
+                        onchange={
+                            let selected_load = selected_load.clone();
+                            Callback::from(move |e: Event| {
+                                let select = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+                                selected_load.set(select.value());
+                            })
+                        }
+                    >
+                        <option value="">{"-- Select a Build --"}</option>
                         { for (*saved_names).iter().map(|name| html! {
                             <option value={name.clone()} selected={*selected_load == *name}>{name}</option>
                         })}
                     </select>
-                    <button class="load-btn" onclick={on_load} disabled={(*selected_load).is_empty()}>{"Load"}</button>
+
+                    <button 
+                        class="load-btn" 
+                        onclick={on_load} 
+                        disabled={(*selected_load).is_empty()}
+                    >
+                        {"Load"}
+                    </button>
+
+                    <button 
+                        class="delete-btn" 
+                        onclick={on_delete} 
+                        disabled={(*selected_load).is_empty()}
+                        style="background-color: #8b0000; color: white;"
+                    >
+                        {"Delete"}
+                    </button>
                 </div>
             </div>
         </div>

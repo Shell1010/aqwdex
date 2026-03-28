@@ -2,7 +2,7 @@ use std::str::FromStr;
 use yew::prelude::*;
 use crate::app::class_info::class::ClassSettings;
 use backend::damage::{DamageSource, Skill, Type};
-
+use gloo_console::log;
 
 #[derive(Properties, PartialEq)]
 pub struct SkillProps {
@@ -39,6 +39,7 @@ pub fn skills(props: &SkillProps) -> Html {
                             let current_crit = *is_crit;
 
                             let res = current_skill.compute(&s.weapon, &s.secondary_stats, current_crit);
+                            log!(format!("{:?}", res));
                             let sk_capture = current_skill.clone();
                             let h_capture = state_handle.clone();
                             html! {
@@ -50,7 +51,7 @@ pub fn skills(props: &SkillProps) -> Html {
                                         let h_for_closure = h_capture.clone();
                                         Callback::from(move |e: InputEvent| {
                                             let mut sk = sk_for_closure.clone();
-                                            let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().unwrap_or(1.0);
+                                            let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().unwrap();
                                             sk.damage = val;
                                             let mut list = (*h_for_closure).clone();
                                             list[i] = (sk, current_crit);
