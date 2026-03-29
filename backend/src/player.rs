@@ -1,4 +1,5 @@
 use std::char::MAX;
+use std::fmt::Display;
 use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 
@@ -19,6 +20,21 @@ pub enum ClassModel {
     PowerCaster,
     #[default] FullHybrid,
     LuckHybrid,
+}
+
+impl Display for ClassModel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ClassModel::TankMelee => write!(f, "Tank Melee"),
+            ClassModel::DodgeMelee => write!(f, "Dodge Melee"),
+            ClassModel::PowerMelee => write!(f, "Power Melee"),
+            ClassModel::OffensiveCaster => write!(f, "Offensive Caster"),
+            ClassModel::DefensiveCaster => write!(f, "Defensive Caster"),
+            ClassModel::PowerCaster => write!(f, "Power Caster"),
+            ClassModel::FullHybrid => write!(f, "Full Hybrid"),
+            ClassModel::LuckHybrid => write!(f, "Luck Hybrid"),
+        }
+    }
 }
 
 impl FromStr for ClassModel {

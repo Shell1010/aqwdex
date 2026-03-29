@@ -169,20 +169,20 @@ impl Type {
 
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Target {
     Yourself,
     Enemy,
     Friendly
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ForceResult {
     Hit,
     Crit,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Properties {
     pub force_result: Option<ForceResult>,
     pub add_crit: Option<f32>,
@@ -190,7 +190,7 @@ pub struct Properties {
     pub hp_back: Option<u32>,
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Skill {
     pub damage: f32,
     pub dsrc: DamageSource,

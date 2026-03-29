@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use crate::app::class_info::build_manager::BuildManager;
-use backend::{damage::{Weapon, WeaponBoost}, gear::{ Enhancement, EnhancementPattern, GearSlot, get_stats}, player::{Class, ClassModel, Player, PrimaryStats, SecondaryStats}};
+use backend::{damage::{Skill, Weapon, WeaponBoost}, gear::{ Enhancement, EnhancementPattern, GearSlot, get_stats}, player::{Class, ClassModel, Player, PrimaryStats, SecondaryStats}};
 use gloo_console::log;
 use yew::prelude::*;
 use crate::app::class_info::{enhancement_picker::EnhancementPicker, passive::{CustomPassive, OperationType, TargetType}};
@@ -18,7 +18,8 @@ pub struct ClassSettings {
     pub class: Class,
     pub primary_stats: PrimaryStats,
     pub secondary_stats: SecondaryStats,
-    pub passives: Vec<CustomPassive>
+    pub passives: Vec<CustomPassive>,
+    pub skills: Vec<(Skill, bool)>
 }
 
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
@@ -68,7 +69,8 @@ impl Default for ClassSettings {
             class: class.clone(),
             primary_stats: primary_stats.clone(),
             secondary_stats: class.class_model.secondary_stats_convert(&player, &primary_stats),
-            passives: vec![]
+            passives: vec![],
+            skills: vec![(Skill::default(), false); 5],
         }
     }
 
@@ -342,6 +344,15 @@ pub fn player_settings() -> Html {
         })
     };
     
+    let on_update_skills = {
+        let settings_handle = settings.clone();
+        Callback::from(move |new_skills: Vec<(Skill, bool)>| {
+            let mut current_settings = (*settings_handle).clone();
+            current_settings.skills = new_skills;
+            settings_handle.set(current_settings);
+        })
+    };
+    
     let on_add_passive = {
         let settings = settings.clone();
         
@@ -377,8 +388,8 @@ pub fn player_settings() -> Html {
             
             loaded_settings.refresh_stats();
             log!(format!("{:?}", loaded_settings));
-            load_count.set(*load_count + 1);
             settings.set(loaded_settings);
+            load_count.set(*load_count + 1);
             
         })
     };
@@ -411,11 +422,11 @@ pub fn player_settings() -> Html {
                 <div class="input-field">
                     <label>{"Class Model: "}</label>
                     
-                    <select onchange={on_model_change}>
+                    <select onchange={on_model_change} value={settings.class.class_model.to_string()}>
                         { for models.into_iter().map(|m| {
-                            html! { <option value={m}>{m}</option> }
+                            html! { <option value={m} selected={m == settings.class.class_model.to_string()}>{m}</option> }
                         })}
-                    </select>
+                </select>
                 </div>
 
 
@@ -526,7 +537,7 @@ pub fn player_settings() -> Html {
             <PassiveManager settings={(*settings).clone()} on_update_passives={on_add_passive} />
 
             <hr />
-            <Skills settings={(*settings).clone()} />
+            <Skills settings={(*settings).clone()} on_update_skills={on_update_skills}/>
             
             <div class="build-panel">
                 <BuildManager 

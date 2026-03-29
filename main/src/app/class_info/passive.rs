@@ -40,7 +40,7 @@ pub struct PassiveProps {
 }
 #[function_component(PassiveManager)]
 pub fn passive_manager(props: &PassiveProps) -> Html {
-    let passives_state = use_state(|| Vec::<CustomPassive>::new());
+    let passives_state = &props.settings.passives;
     
     let primary_options = vec!["Strength", "Intellect", "Endurance", "Dexterity", "Wisdom", "Luck"];
     let secondary_options = vec![
@@ -55,11 +55,10 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
     let on_update_parent = props.on_update_passives.clone();
     
     let update_at_index = Callback::from(move |(idx, updated_p): (usize, CustomPassive)| {
-        let mut list = (*state_handle).clone();
+        let mut list = state_handle.clone();
         if let Some(item) = list.get_mut(idx) {
             *item = updated_p;
             on_update_parent.emit(list.clone());
-            state_handle.set(list);
         }
     });
 
@@ -179,10 +178,9 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
                                     let state_handle = passives_state.clone();
                                     let on_update = props.on_update_passives.clone();
                                     Callback::from(move |_| {
-                                        let mut list = (*state_handle).clone();
+                                        let mut list = state_handle.clone();
                                         list.remove(i);
                                         on_update.emit(list.clone());
-                                        state_handle.set(list);
                                     })
                                 }>{"Delete"}</button>
                             </td>
@@ -193,11 +191,12 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
             </table>
 
             <button class="add-row-btn" onclick={
-                let state_h = passives_state.clone();
+                let state_handle = passives_state.clone();
+                let on_update = props.on_update_passives.clone();
                 Callback::from(move |_| {
-                    let mut list = (*state_h).clone();
+                    let mut list = state_handle.clone();
                     list.push(CustomPassive::default());
-                    state_h.set(list);
+                    on_update.emit(list.clone());
                 })
             }>{"＋ Add New Passive Row"}</button>
         </div>
