@@ -25,8 +25,7 @@ pub fn build_manager(props: &BuildManagerProps) -> Html {
     
         Callback::from(move |_| {
             let mut builds = load_all_builds();
-            let base_name = current_settings.name.trim();
-            let base_name = if base_name.is_empty() { "New Build" } else { base_name };
+            let base_name = if current_settings.name.trim().is_empty() { "New Build".to_string() } else { current_settings.name.trim().to_string() };
             
             let mut unique_name = base_name.to_string();
             let mut counter = 1;
@@ -43,83 +42,69 @@ pub fn build_manager(props: &BuildManagerProps) -> Html {
             saved_names.set(names);
         })
     };
-
-    let on_load = {
-        let selected_load = selected_load.clone();
+    
+    let load_build = {
         let on_load_build = props.on_load_build.clone();
-
-        Callback::from(move |_| {
-            let name = (*selected_load).clone();
-            if name.is_empty() { return; }
-
+        move |name: String| {
             let builds = load_all_builds();
             if let Some(settings) = builds.get(&name) {
                 on_load_build.emit(settings.clone());
             }
-        })
+        }
     };
 
-    let on_delete = {
-        let selected_load = selected_load.clone();
+    let delete_build = {
         let saved_names = saved_names.clone();
-
-        Callback::from(move |_| {
-            let name = (*selected_load).clone();
-            if name.is_empty() { return; }
-
+        move |name: String| {
             let mut builds = load_all_builds();
-            builds.remove(&name); // Remove from HashMap
+            builds.remove(&name);
             save_all_builds(&builds);
             let mut names: Vec<String> = builds.keys().cloned().collect();
             names.sort();
             saved_names.set(names);
-            selected_load.set("".to_string());
-        })
+        }
     };
 
     html! {
         <div class="build-manager">
-            <h4>{"Build Management"}</h4>
-            <div class="build-actions">
-                <button class="save-btn" onclick={on_save}>{"Save Current Build"}</button>
+            <div class="build-header">
+                <h4>{"System / Builds"}</h4>
+                <button class="save-btn" onclick={on_save}>{"[+] Save Current"}</button>
             </div>
 
-            <div class="input-field">
-                <label>{"Manage Builds: "}</label>
-                <div class="form-row">
-                    <select 
-                        value={(*selected_load).clone()}
-                        onchange={
-                            let selected_load = selected_load.clone();
-                            Callback::from(move |e: Event| {
-                                let select = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                selected_load.set(select.value());
-                            })
-                        }
-                    >
-                        <option value="">{"-- Select a Build --"}</option>
-                        { for (*saved_names).iter().map(|name| html! {
-                            <option value={name.clone()} selected={*selected_load == *name}>{name}</option>
-                        })}
-                    </select>
+            <div class="build-directory">
+                { for (*saved_names).iter().map(|name| {
+                    let name_clone = name.clone();
+                    let load_cb = {
+                        let name = name.clone();
+                        let load_build = load_build.clone();
+                        Callback::from(move |_| load_build(name.clone()))
+                    };
+                    let delete_cb = {
+                        let name = name.clone();
+                        let delete_build = delete_build.clone();
+                        Callback::from(move |e: MouseEvent| {
+                            e.stop_propagation(); // Prevent triggering load if clicking delete
+                            delete_build(name.clone());
+                        })
+                    };
 
-                    <button 
-                        class="load-btn" 
-                        onclick={on_load} 
-                        disabled={(*selected_load).is_empty()}
-                    >
-                        {"Load"}
-                    </button>
+                    html! {
+                        <div class="build-item" onclick={load_cb}>
+                            <span class="build-icon">{"📄"}</span>
+                            <span class="build-name">{name_clone}</span>
+                            <div class="build-item-actions">
+                                <button class="mini-load-btn">{"LOAD"}</button>
+                                <button class="mini-delete-btn" onclick={delete_cb}>{"DEL"}</button>
+                            </div>
+                        </div>
+                    }
+                })}
+            </div>
 
-                    <button 
-                        class="delete-btn" 
-                        onclick={on_delete} 
-                        disabled={(*selected_load).is_empty()}
-                        style="background-color: #8b0000; color: white;"
-                    >
-                        {"Delete"}
-                    </button>
-                </div>
+            <div class="build-io">
+                <button class="io-btn">{"Export String"}</button>
+                <button class="io-btn">{"Import String"}</button>
             </div>
         </div>
     }

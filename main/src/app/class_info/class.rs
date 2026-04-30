@@ -480,7 +480,7 @@ pub fn player_settings() -> Html {
                             }
                         />
 
-                        <label>{"Special Boost:"}</label>
+                        <label>{"Weapon Boost:"}</label>
                         <select onchange={
                             let on_weapon_change = on_weapon_change.clone();
                             Callback::from(move |e: Event| {
