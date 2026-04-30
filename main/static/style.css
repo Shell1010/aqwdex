@@ -24,21 +24,11 @@ body {
   line-height: 1.5;
 }
 
-/* --- Main Container (class.rs wrapper) --- */
-.class-config {
-  max-width: 900px;
-  margin: 0 auto;
-  background-color: var(--bg-panel);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-}
 
 /* Typography Headings */
-.class-config h2, 
-.class-config h3, 
-.class-config h4 {
+.app-layout h2, 
+.app-layout h3, 
+.app-layout h4 {
   color: var(--accent);
   margin-top: 0;
   margin-bottom: 15px;
@@ -49,11 +39,7 @@ body {
   padding-bottom: 5px;
 }
 
-/* Add terminal "prompt" arrow to the main heading */
-.class-config h2::before {
-  content: "> ";
-  color: var(--text-muted);
-}
+
 
 /* --- General Inputs & Selects --- */
 input[type="text"],
@@ -493,4 +479,78 @@ input[type="checkbox"] {
 .io-btn:hover {
     border-color: var(--accent);
     color: var(--accent);
+}
+
+/* --- Two-Column Layout --- */
+.app-layout {
+    display: grid;
+    grid-template-columns: 400px 1fr; /* Fixed left panel, expanding right panel */
+    gap: 20px;
+    align-items: start; /* Prevents panels from stretching vertically unnecessarily */
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.panel-left, .panel-right {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 20px;
+}
+
+/* Ensure the right panel can scroll horizontally if the table gets too big */
+.panel-right {
+    overflow-x: auto;
+}
+
+/* --- Sub-Row Buff Editor --- */
+.skill-buff-row {
+    background-color: rgba(88, 166, 255, 0.05); /* Slight blue tint to indicate nesting */
+}
+
+.skill-buff-row td {
+    padding: 0 !important; /* Remove padding so the inner div controls it */
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+.buff-editor {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 15px;
+    font-size: 0.8rem;
+}
+
+.buff-prefix {
+    color: var(--accent);
+    font-family: var(--font-terminal);
+    opacity: 0.8;
+}
+
+/* Make inputs inside the buff editor a bit wider so values aren't clipped */
+.buff-val-input {
+    max-width: 80px;
+    border-bottom: 1px dashed var(--accent) !important;
+}
+
+/* Buff Toggle Buttons */
+.buff-toggle-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px dashed var(--border-color);
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.buff-toggle-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.buff-toggle-btn.active {
+    color: #f85149; /* Red color to indicate "Close/Remove" */
+    border-color: rgba(248, 81, 73, 0.5);
+    border-style: solid;
 }

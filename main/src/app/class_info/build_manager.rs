@@ -84,7 +84,7 @@ pub fn build_manager(props: &BuildManagerProps) -> Html {
                         let name = name.clone();
                         let delete_build = delete_build.clone();
                         Callback::from(move |e: MouseEvent| {
-                            e.stop_propagation(); // Prevent triggering load if clicking delete
+                            e.stop_propagation();
                             delete_build(name.clone());
                         })
                     };

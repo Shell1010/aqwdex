@@ -19,7 +19,7 @@ pub struct ClassSettings {
     pub primary_stats: PrimaryStats,
     pub secondary_stats: SecondaryStats,
     pub passives: Vec<CustomPassive>,
-    pub skills: Vec<(Skill, bool)>
+    pub skills: Vec<(Skill, Vec<CustomPassive>, bool)>
 }
 
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
@@ -70,7 +70,7 @@ impl Default for ClassSettings {
             primary_stats: primary_stats.clone(),
             secondary_stats: class.class_model.secondary_stats_convert(&player, &primary_stats),
             passives: vec![],
-            skills: vec![(Skill::default(), false); 5],
+            skills: vec![(Skill::default(), vec![], false); 5],
         }
     }
 
@@ -346,7 +346,7 @@ pub fn player_settings() -> Html {
     
     let on_update_skills = {
         let settings_handle = settings.clone();
-        Callback::from(move |new_skills: Vec<(Skill, bool)>| {
+        Callback::from(move |new_skills: Vec<(Skill, Vec<CustomPassive>, bool)>| {
             let mut current_settings = (*settings_handle).clone();
             current_settings.skills = new_skills;
             settings_handle.set(current_settings);
@@ -397,155 +397,159 @@ pub fn player_settings() -> Html {
 
 
     html! {
-        <div class="class-config" key={*load_count}>
-            <h2>{"Player Configuration"}</h2>
-                <div class="input-field">
-                    <label>{"Build Name: "}</label>
-                    <input
-                        type="text"
-                        value={settings.name.clone()}
-                        oninput={on_name_change}
-                    />
-                </div>
-                
-                <div class="input-field">
-                    <label>{"Level: "}</label>
-                    <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={settings.level.level.to_string()}
-                        oninput={on_level_input}
-                    />
-                </div>
-
-                <div class="input-field">
-                    <label>{"Class Model: "}</label>
-                    
-                    <select onchange={on_model_change} value={settings.class.class_model.to_string()}>
-                        { for models.into_iter().map(|m| {
-                            html! { <option value={m} selected={m == settings.class.class_model.to_string()}>{m}</option> }
-                        })}
-                </select>
-                </div>
-
-
-                <div class="enhancement-config">
-                    <EnhancementPicker
-                        label="Helm"
-                        enhancement={settings.equipment.helm.clone()}
-                        on_change={make_callback("helm")}
-                    />
-                    <EnhancementPicker
-                        label="Cape"
-                        enhancement={settings.equipment.cape.clone()}
-                        on_change={make_callback("cape")}
-                    />
-                    <EnhancementPicker
-                        label="Weapon"
-                        enhancement={settings.equipment.weapon.clone()}
-                        on_change={make_callback("weapon")}
-                    />
-                    <EnhancementPicker
-                        label="Class"
-                        enhancement={settings.equipment.class.clone()}
-                        on_change={make_callback("class")}
-                    />
-                </div>
-                <div class="weapon-config">
-                    <h3>{"Weapon Metadata"}</h3>
-
-                    <div class="input-grid">
-                        <label>{"Range:"}</label>
-                        <input type="number" step="0.1"
-                            value={settings.weapon.range.to_string()}
-                            oninput={
-                                let on_weapon_change = on_weapon_change.clone();
-                                Callback::from(move |e: InputEvent| {
-                                    let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().ok();
-                                    on_weapon_change.emit((val, None, None))
-                                })
-                            }
+        <div class="app-layout" key={*load_count}>
+            <div class="panel-left" key={*load_count}>
+                <h2>{"Player Configuration"}</h2>
+                    <div class="input-field">
+                        <label>{"Build Name: "}</label>
+                        <input
+                            type="text"
+                            value={settings.name.clone()}
+                            oninput={on_name_change}
                         />
-
-                        <label>{"Weapon DPS:"}</label>
-                        <input type="number" step="0.1"
-                            value={settings.weapon.dps.to_string()}
-                            oninput={
-                                let on_weapon_change = on_weapon_change.clone();
-                                Callback::from(move |e: InputEvent| {
-                                    let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().ok();
-                                    on_weapon_change.emit((None, val, None))
-                                })
-                            }
-                        />
-
-                        <label>{"Weapon Boost:"}</label>
-                        <select onchange={
-                            let on_weapon_change = on_weapon_change.clone();
-                            Callback::from(move |e: Event| {
-                                let select = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                let boost = match select.value().as_str() {
-                                    "15" => WeaponBoost::Boost15,
-                                    "30" => WeaponBoost::Boost30,
-                                    "51" => WeaponBoost::Boost51,
-                                    "51x30" => WeaponBoost::Boost51x30,
-                                    "51x40" => WeaponBoost::Boost51x40,
-                                    "51x51" => WeaponBoost::Boost51x50,
-                                    "35x75" => WeaponBoost::Boost35x75,
-                                    "custom" => WeaponBoost::Custom(1.0),
-                                    _ => WeaponBoost::Custom(1.0),
-                                };
-                                on_weapon_change.emit((None, None, Some(boost)))
-                            })
-                        }>
-                            <option value="none" selected={matches!(settings.weapon.boost, WeaponBoost::Custom(1.0))}>{"None"}</option>
-                            <option value="15" selected={matches!(settings.weapon.boost, WeaponBoost::Boost15)}>{"15%"}</option>
-                            <option value="30" selected={matches!(settings.weapon.boost, WeaponBoost::Boost30)}>{"30%"}</option>
-                            <option value="51" selected={matches!(settings.weapon.boost, WeaponBoost::Boost51)}>{"51%"}</option>
-                            <option value="51x30" selected={matches!(settings.weapon.boost, WeaponBoost::Boost51x30)}>{"51% + 30%"}</option>
-                            <option value="51x40" selected={matches!(settings.weapon.boost, WeaponBoost::Boost51x40)}>{"51% + 40%"}</option>
-                            <option value="51x51" selected={matches!(settings.weapon.boost, WeaponBoost::Boost51x50)}>{"51% + 50%"}</option>
-                            <option value="35x75" selected={matches!(settings.weapon.boost, WeaponBoost::Boost35x75)}>{"35% + 75%"}</option>
-                            <option value="custom" selected={matches!(settings.weapon.boost, WeaponBoost::Custom(_))}>{"Custom Value..."}</option>
-                        </select>
-                        {
-                            if let WeaponBoost::Custom(val) = settings.weapon.boost {
-                                html! {
-                                    <>
-                                        <label>{"Custom Multiplier:"}</label>
-                                        <input type="number" step="0.01" value={val.to_string()}
-                                            oninput={
-                                                let on_weapon_change = on_weapon_change.clone();
-                                                Callback::from(move |e: InputEvent| {
-                                                    let input = e.target_unchecked_into::<web_sys::HtmlInputElement>();
-                                                    if let Ok(num) = input.value().parse::<f32>() {
-                                                        on_weapon_change.emit((None, None, Some(WeaponBoost::Custom(num))));
-                                                    }
-                                                })
-                                            }
-                                        />
-                                    </>
-                                }
-                            } else {
-                                html! {}
-                            }
-                        }
                     </div>
+                    
+                    <div class="input-field">
+                        <label>{"Level: "}</label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="100"
+                            value={settings.level.level.to_string()}
+                            oninput={on_level_input}
+                        />
+                    </div>
+    
+                    <div class="input-field">
+                        <label>{"Class Model: "}</label>
+                        
+                        <select onchange={on_model_change} value={settings.class.class_model.to_string()}>
+                            { for models.into_iter().map(|m| {
+                                html! { <option value={m} selected={m == settings.class.class_model.to_string()}>{m}</option> }
+                            })}
+                    </select>
+                    </div>
+    
+    
+                    <div class="enhancement-config">
+                        <EnhancementPicker
+                            label="Helm"
+                            enhancement={settings.equipment.helm.clone()}
+                            on_change={make_callback("helm")}
+                        />
+                        <EnhancementPicker
+                            label="Cape"
+                            enhancement={settings.equipment.cape.clone()}
+                            on_change={make_callback("cape")}
+                        />
+                        <EnhancementPicker
+                            label="Weapon"
+                            enhancement={settings.equipment.weapon.clone()}
+                            on_change={make_callback("weapon")}
+                        />
+                        <EnhancementPicker
+                            label="Class"
+                            enhancement={settings.equipment.class.clone()}
+                            on_change={make_callback("class")}
+                        />
+                    </div>
+                    <div class="weapon-config">
+                        <h3>{"Weapon Metadata"}</h3>
+    
+                        <div class="input-grid">
+                            <label>{"Range:"}</label>
+                            <input type="number" step="0.1"
+                                value={settings.weapon.range.to_string()}
+                                oninput={
+                                    let on_weapon_change = on_weapon_change.clone();
+                                    Callback::from(move |e: InputEvent| {
+                                        let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().ok();
+                                        on_weapon_change.emit((val, None, None))
+                                    })
+                                }
+                            />
+    
+                            <label>{"Weapon DPS:"}</label>
+                            <input type="number" step="0.1"
+                                value={settings.weapon.dps.to_string()}
+                                oninput={
+                                    let on_weapon_change = on_weapon_change.clone();
+                                    Callback::from(move |e: InputEvent| {
+                                        let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().ok();
+                                        on_weapon_change.emit((None, val, None))
+                                    })
+                                }
+                            />
+    
+                            <label>{"Weapon Boost:"}</label>
+                            <select onchange={
+                                let on_weapon_change = on_weapon_change.clone();
+                                Callback::from(move |e: Event| {
+                                    let select = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+                                    let boost = match select.value().as_str() {
+                                        "15" => WeaponBoost::Boost15,
+                                        "30" => WeaponBoost::Boost30,
+                                        "51" => WeaponBoost::Boost51,
+                                        "51x30" => WeaponBoost::Boost51x30,
+                                        "51x40" => WeaponBoost::Boost51x40,
+                                        "51x51" => WeaponBoost::Boost51x50,
+                                        "35x75" => WeaponBoost::Boost35x75,
+                                        "custom" => WeaponBoost::Custom(1.0),
+                                        _ => WeaponBoost::Custom(1.0),
+                                    };
+                                    on_weapon_change.emit((None, None, Some(boost)))
+                                })
+                            }>
+                                <option value="none" selected={matches!(settings.weapon.boost, WeaponBoost::Custom(1.0))}>{"None"}</option>
+                                <option value="15" selected={matches!(settings.weapon.boost, WeaponBoost::Boost15)}>{"15%"}</option>
+                                <option value="30" selected={matches!(settings.weapon.boost, WeaponBoost::Boost30)}>{"30%"}</option>
+                                <option value="51" selected={matches!(settings.weapon.boost, WeaponBoost::Boost51)}>{"51%"}</option>
+                                <option value="51x30" selected={matches!(settings.weapon.boost, WeaponBoost::Boost51x30)}>{"51% + 30%"}</option>
+                                <option value="51x40" selected={matches!(settings.weapon.boost, WeaponBoost::Boost51x40)}>{"51% + 40%"}</option>
+                                <option value="51x51" selected={matches!(settings.weapon.boost, WeaponBoost::Boost51x50)}>{"51% + 50%"}</option>
+                                <option value="35x75" selected={matches!(settings.weapon.boost, WeaponBoost::Boost35x75)}>{"35% + 75%"}</option>
+                                <option value="custom" selected={matches!(settings.weapon.boost, WeaponBoost::Custom(_))}>{"Custom Value..."}</option>
+                            </select>
+                            {
+                                if let WeaponBoost::Custom(val) = settings.weapon.boost {
+                                    html! {
+                                        <>
+                                            <label>{"Custom Multiplier:"}</label>
+                                            <input type="number" step="0.01" value={val.to_string()}
+                                                oninput={
+                                                    let on_weapon_change = on_weapon_change.clone();
+                                                    Callback::from(move |e: InputEvent| {
+                                                        let input = e.target_unchecked_into::<web_sys::HtmlInputElement>();
+                                                        if let Ok(num) = input.value().parse::<f32>() {
+                                                            on_weapon_change.emit((None, None, Some(WeaponBoost::Custom(num))));
+                                                        }
+                                                    })
+                                                }
+                                            />
+                                        </>
+                                    }
+                                } else {
+                                    html! {}
+                                }
+                            }
+                        </div>
+                    </div>
+                <StatDisplay settings={(*settings).clone()} />
+                <PassiveManager settings={(*settings).clone()} on_update_passives={on_add_passive} />
+    
+                <hr />
+                
+                
+                <div class="build-panel">
+                    <BuildManager 
+                        current_settings={(*settings).clone()} 
+                        on_load_build={on_load_build} 
+                    />
                 </div>
-            <StatDisplay settings={(*settings).clone()} />
-            <PassiveManager settings={(*settings).clone()} on_update_passives={on_add_passive} />
-
-            <hr />
-            <Skills settings={(*settings).clone()} on_update_skills={on_update_skills}/>
-            
-            <div class="build-panel">
-                <BuildManager 
-                    current_settings={(*settings).clone()} 
-                    on_load_build={on_load_build} 
-                />
             </div>
-            
+            <div class="panel-right">
+                <Skills settings={(*settings).clone()} on_update_skills={on_update_skills}/>
+            </div>
 
         </div>
     }
