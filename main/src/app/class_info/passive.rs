@@ -20,6 +20,7 @@ pub struct CustomPassive {
     pub stat_name: String,
     pub value: f32,
     pub operation_type: OperationType,
+    pub duration: Option<u32>,
 }
 
 impl Default for CustomPassive {
@@ -29,6 +30,7 @@ impl Default for CustomPassive {
             stat_name: "Strength".to_string(),
             value: 0.0,
             operation_type: OperationType::Additive,
+            duration: None
         }
     }
 }
@@ -41,19 +43,19 @@ pub struct PassiveProps {
 #[function_component(PassiveManager)]
 pub fn passive_manager(props: &PassiveProps) -> Html {
     let passives_state = &props.settings.passives;
-    
+
     let primary_options = vec!["Strength", "Intellect", "Endurance", "Dexterity", "Wisdom", "Luck"];
     let secondary_options = vec![
-        "Haste", "Crit Chance", "Hit Chance", "Dodge Chance", 
+        "Haste", "Crit Chance", "Hit Chance", "Dodge Chance",
         "All Out", "Phy Out", "Mag Out", "Heal Out",
         "All In", "Phy In", "Mag In", "Heal In",
-        "DoT In", "Dot Out", "Mana Consumption",
+        "DoT In", "DoT Out", "Mana Consumption",
         "Attack Power", "Spell Power", "Crit Modifier"
     ];
 
     let state_handle = passives_state.clone();
     let on_update_parent = props.on_update_passives.clone();
-    
+
     let update_at_index = Callback::from(move |(idx, updated_p): (usize, CustomPassive)| {
         let mut list = state_handle.clone();
         if let Some(item) = list.get_mut(idx) {
@@ -79,13 +81,13 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
                 { for (*passives_state).iter().enumerate().map(|(i, passive)| {
                     let current_passive = passive.clone();
                     let up_cb = update_at_index.clone();
-                
-                    let stat_options = if current_passive.target_type == TargetType::Primary { 
-                        &primary_options 
-                    } else { 
-                        &secondary_options 
+
+                    let stat_options = if current_passive.target_type == TargetType::Primary {
+                        &primary_options
+                    } else {
+                        &secondary_options
                     };
-                
+
                     html! {
                         <tr key={i}>
                             <td>
@@ -94,7 +96,7 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
                                     let up = up_cb.clone();
                                     Callback::from(move |e: Event| {
                                         let mut p = current_passive.clone();
-                                        
+
                                         let input = e.target_unchecked_into::<web_sys::HtmlInputElement>();
                                         match input.value().as_str() {
                                             "Secondary" => {
@@ -113,7 +115,7 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
                                     <option value="Secondary" selected={current_passive.target_type == TargetType::Secondary}>{"Secondary"}</option>
                                 </select>
                             </td>
-                
+
                             <td>
                                 <select onchange={
                                     let current_passive = current_passive.clone();
@@ -130,9 +132,9 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
                                     })}
                                 </select>
                             </td>
-                            
-                            
-                            
+
+
+
                             <td>
                                 <select onchange={
                                     let current_passive = passive.clone();
@@ -151,13 +153,13 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
                                         }
                                         up.emit((i, p));
                                     })
-                                
+
                                 }>
                                     <option value="Additive" selected={current_passive.operation_type == OperationType::Additive}>{"Additive"}</option>
                                     <option value="Multiplicative" selected={current_passive.operation_type == OperationType::Multiplicative}>{"Multiplicative"}</option>
                                 </select>
                             </td>
-                            
+
                             <td>
                                 <input type="number" class="table-input" value={current_passive.value.to_string()} oninput={
                                     let current_passive = passive.clone();
@@ -170,9 +172,9 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
                                     })
                                 } />
                             </td>
-                            
-                  
-                            
+
+
+
                             <td>
                                 <button class="delete-btn" onclick={
                                     let state_handle = passives_state.clone();

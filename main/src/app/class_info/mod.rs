@@ -4,3 +4,4 @@ pub mod skills;
 pub mod stats;
 pub mod passive;
 pub mod build_manager;
+pub mod dps;

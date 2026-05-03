@@ -23,7 +23,7 @@ pub fn skills(props: &SkillProps) -> Html {
         "Haste", "Crit Chance", "Hit Chance", "Dodge Chance",
         "All Out", "Phy Out", "Mag Out", "Heal Out",
         "All In", "Phy In", "Mag In", "Heal In",
-        "DoT In", "Dot Out", "Mana Consumption",
+        "DoT In", "DoT Out", "Mana Consumption",
         "Attack Power", "Spell Power", "Crit Modifier"
     ];
 
@@ -43,6 +43,7 @@ pub fn skills(props: &SkillProps) -> Html {
     html! {
             <div class="skill-editor panel-right-section">
                 <h3>{"Skill Overrides & Calculations"}</h3>
+
                 <table>
                     <thead>
                         <tr>
@@ -188,7 +189,7 @@ pub fn skills(props: &SkillProps) -> Html {
                                         </td>
                                     </tr>
 
-                                    /* --- Multi-Buff Sub-Rows --- */
+
                                     { for passives.iter().enumerate().map(|(p_idx, current_passive)| {
                                         let current_passive = current_passive.clone();
                                         let stat_options = if current_passive.target_type == TargetType::Primary { &primary_options } else { &secondary_options };
@@ -199,7 +200,7 @@ pub fn skills(props: &SkillProps) -> Html {
                                                     <div class="buff-editor">
                                                         <span class="buff-prefix">{format!("↳ Buff #{}", p_idx + 1)}</span>
 
-                                                        /* --- Target Type Select --- */
+
                                                         <select onchange={
                                                             let s = skill.clone();
                                                             let p_list = passives.clone();
@@ -218,7 +219,7 @@ pub fn skills(props: &SkillProps) -> Html {
                                                             <option value="Secondary" selected={current_passive.target_type == TargetType::Secondary}>{"Secondary"}</option>
                                                         </select>
 
-                                                        /* --- Stat Name Select --- */
+
                                                         <select onchange={
                                                             let s = skill.clone();
                                                             let p_list = passives.clone();
@@ -236,16 +237,55 @@ pub fn skills(props: &SkillProps) -> Html {
                                                             })}
                                                         </select>
 
-                                                        /* --- Value Input --- */
+
+                                                        <select onchange={
+                                                            let s = skill.clone();
+                                                            let p_list = passives.clone();
+                                                            let up = up_cb.clone();
+                                                            Callback::from(move |e: Event| {
+                                                                let mut p_list = p_list.clone();
+                                                                if let Some(p) = p_list.get_mut(p_idx) {
+                                                                    let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
+                                                                    p.operation_type = match val.as_str() {
+                                                                        "Multiplicative" => OperationType::Multiplicative,
+                                                                        _ => OperationType::Additive,
+                                                                    };
+                                                                    up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                }
+                                                            })
+                                                        }>
+                                                            <option value="Additive" selected={current_passive.operation_type == OperationType::Additive}>{"Add"}</option>
+                                                            <option value="Multiplicative" selected={current_passive.operation_type == OperationType::Multiplicative}>{"Mult"}</option>
+                                                        </select>
+
                                                         <input type="number" step="0.01" class="table-input buff-val-input" value={current_passive.value.to_string()} oninput={
                                                             let s = skill.clone();
                                                             let p_list = passives.clone();
                                                             let up = up_cb.clone();
                                                             Callback::from(move |e: InputEvent| {
-                                                                let mut p_list = p_list.clone();
-                                                                if let Some(p) = p_list.get_mut(p_idx) {
-                                                                    p.value = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().unwrap_or(0.0);
-                                                                    up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                let raw = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
+                                                                if let Ok(val) = raw.parse::<f32>() {
+                                                                    let mut p_list = p_list.clone();
+                                                                    if let Some(p) = p_list.get_mut(p_idx) {
+                                                                        p.value = val;
+                                                                        up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                    }
+                                                                }
+                                                            })
+                                                        } />
+
+                                                        <input type="number" step="1" class="table-input buff-val-input" value={current_passive.duration.unwrap_or(1000).to_string()} oninput={
+                                                            let s = skill.clone();
+                                                            let p_list = passives.clone();
+                                                            let up = up_cb.clone();
+                                                            Callback::from(move |e: InputEvent| {
+                                                                let raw = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
+                                                                if let Ok(val) = raw.parse::<u32>() {
+                                                                    let mut p_list = p_list.clone();
+                                                                    if let Some(p) = p_list.get_mut(p_idx) {
+                                                                        p.duration = Some(val);
+                                                                        up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                    }
                                                                 }
                                                             })
                                                         } />
