@@ -7,7 +7,7 @@ A damage calculator for AdventureQuest Worlds written with Rust and Yew.
 - [x] Do CSS to make it pretty:tm:
 - [ ] Add Dynamic/Static pipelines (probably wont do this)
 - [ ] Integrate Chrono2 function and logic 
-- [ q] Create enemy panel, with its own stats/logic, be able to add skills to enemies
+- [ ] Create enemy panel, with its own stats/logic, be able to add skills to enemies
 - [ ] Probably a billion more things
 
 
