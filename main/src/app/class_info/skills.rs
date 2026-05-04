@@ -3,7 +3,6 @@ use yew::prelude::*;
 use crate::app::class_info::class::ClassSettings;
 use crate::app::class_info::passive::{CustomPassive, TargetType, OperationType};
 use backend::damage::{DamageSource, Skill, Type};
-use gloo_console::log;
 
 #[derive(Properties, PartialEq)]
 pub struct SkillProps {
