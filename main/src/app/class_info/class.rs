@@ -1,13 +1,14 @@
 use std::str::FromStr;
 use crate::app::class_info::build_manager::BuildManager;
 use crate::app::class_info::dps::DpsCalculator;
-use backend::{damage::{Skill, Weapon, WeaponBoost}, gear::{ Enhancement, EnhancementPattern, GearSlot, get_stats}, player::{Class, ClassModel, Player, PrimaryStats, SecondaryStats}};
+use backend::{damage::{Skill, Type, Weapon, WeaponBoost}, enemy::EnemySecondaryStats, gear::{ Enhancement, EnhancementPattern, GearSlot, get_stats}, player::{Class, ClassModel, Player, PrimaryStats, SecondaryStats}};
 use gloo_console::log;
 use yew::prelude::*;
 use crate::app::class_info::{enhancement_picker::EnhancementPicker, passive::{CustomPassive, OperationType, TargetType}};
 use crate::app::class_info::stats::StatDisplay;
 use crate::app::class_info::skills::Skills;
 use crate::app::class_info::passive::PassiveManager;
+use crate::app::class_info::enemy::EnemyPanel;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
@@ -20,7 +21,8 @@ pub struct ClassSettings {
     pub primary_stats: PrimaryStats,
     pub secondary_stats: SecondaryStats,
     pub passives: Vec<CustomPassive>,
-    pub skills: Vec<(Skill, Vec<CustomPassive>, bool)>
+    pub skills: Vec<(Skill, Vec<CustomPassive>, bool)>,
+    pub enemy: EnemySecondaryStats,
 }
 
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
@@ -72,6 +74,7 @@ impl Default for ClassSettings {
             secondary_stats: class.class_model.secondary_stats_convert(&player, &primary_stats),
             passives: vec![],
             skills: vec![(Skill::default(), vec![], false); 5],
+            enemy: EnemySecondaryStats::new(),
         }
     }
 
@@ -268,6 +271,85 @@ pub fn calculate_secondary_changes(secondary_stats: &mut SecondaryStats, passive
     secondary_stats.clone()
 }
 
+/// Applies a single enemy-targeted passive (debuff) to an EnemySecondaryStats snapshot.
+/// Additive debuffs ADD to the enemy stat (e.g. +25 Phy In → enemy takes 25% more physical).
+/// Multiplicative debuffs MULTIPLY the enemy stat.
+pub fn calculate_enemy_changes(enemy_stats: &mut EnemySecondaryStats, passive: &CustomPassive) -> EnemySecondaryStats {
+    if passive.target_type != TargetType::Enemy {
+        return enemy_stats.clone();
+    }
+    match passive.stat_name.as_str() {
+        "All In" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.all_in += passive.value,
+            OperationType::Multiplicative => enemy_stats.all_in *= passive.value,
+        },
+        "Phy In" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.phy_in += passive.value,
+            OperationType::Multiplicative => enemy_stats.phy_in *= passive.value,
+        },
+        "Mag In" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.mag_in += passive.value,
+            OperationType::Multiplicative => enemy_stats.mag_in *= passive.value,
+        },
+        "DoT In" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.dot_in += passive.value,
+            OperationType::Multiplicative => enemy_stats.dot_in *= passive.value,
+        },
+        "Heal In" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.heal_in += passive.value,
+            OperationType::Multiplicative => enemy_stats.heal_in *= passive.value,
+        },
+        "All Out" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.all_out += passive.value,
+            OperationType::Multiplicative => enemy_stats.all_out *= passive.value,
+        },
+        "Phy Out" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.phy_out += passive.value,
+            OperationType::Multiplicative => enemy_stats.phy_out *= passive.value,
+        },
+        "Mag Out" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.mag_out += passive.value,
+            OperationType::Multiplicative => enemy_stats.mag_out *= passive.value,
+        },
+        "DoT Out" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.dot_out += passive.value,
+            OperationType::Multiplicative => enemy_stats.dot_out *= passive.value,
+        },
+        "Heal Out" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.heal_out += passive.value,
+            OperationType::Multiplicative => enemy_stats.heal_out *= passive.value,
+        },
+        "Crit Chance" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.crit_chance += passive.value,
+            OperationType::Multiplicative => enemy_stats.crit_chance *= passive.value,
+        },
+        "Crit Modifier" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.crit_mod += passive.value,
+            OperationType::Multiplicative => enemy_stats.crit_mod *= passive.value,
+        },
+        "Haste" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.haste += passive.value,
+            OperationType::Multiplicative => enemy_stats.haste *= passive.value,
+        },
+        "Dodge" => match passive.operation_type {
+            OperationType::Additive => enemy_stats.dodge += passive.value,
+            OperationType::Multiplicative => enemy_stats.dodge *= passive.value,
+        },
+        _ => ()
+    }
+    enemy_stats.clone()
+}
+
+pub fn enemy_incoming_modifier(damage_type: &Type, enemy: &EnemySecondaryStats) -> f32 {
+    let all_in = enemy.all_in / 100.0;
+    match damage_type {
+        Type::Physical      => all_in * (enemy.phy_in / 100.0),
+        Type::Magical       => all_in * (enemy.mag_in / 100.0),
+        Type::DamageOverTime => all_in * (enemy.dot_in / 100.0),
+        Type::TrueDamage    => 1.0,
+    }
+}
+
 
 impl ClassSettings {
     pub fn refresh_stats(&mut self) {
@@ -393,6 +475,15 @@ pub fn player_settings() -> Html {
         })
     };
 
+    let on_update_enemy = {
+        let settings = settings.clone();
+        Callback::from(move |new_enemy: EnemySecondaryStats| {
+            let mut new_s = (*settings).clone();
+            new_s.enemy = new_enemy;
+            settings.set(new_s);
+        })
+    };
+
     let load_count = use_state(|| 0);
 
     let on_load_build = {
@@ -412,7 +503,9 @@ pub fn player_settings() -> Html {
 
     html! {
         <div class="app-layout" key={*load_count}>
+        <h1 class="aqwdex-title">{"AQWDEX"}</h1>
             <div class="panel-left" key={*load_count}>
+
                 <h2>{"Player Configuration"}</h2>
                     <div class="input-field">
                         <label>{"Build Name: "}</label>
@@ -563,6 +656,7 @@ pub fn player_settings() -> Html {
             </div>
             <div class="panel-right">
                 <Skills settings={(*settings).clone()} on_update_skills={on_update_skills}/>
+                <EnemyPanel settings={(*settings).clone()} on_update_enemy={on_update_enemy} />
                 <DpsCalculator settings={(*settings).clone()} />
             </div>
 

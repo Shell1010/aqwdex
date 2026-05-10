@@ -1,6 +1,6 @@
-    use std::str::FromStr;
+use std::str::FromStr;
 use yew::prelude::*;
-use crate::app::class_info::class::ClassSettings;
+use crate::app::class_info::class::{ClassSettings, enemy_incoming_modifier};
 use crate::app::class_info::passive::{CustomPassive, TargetType, OperationType};
 use backend::damage::{DamageSource, Skill, Type};
 
@@ -24,6 +24,12 @@ pub fn skills(props: &SkillProps) -> Html {
         "All In", "Phy In", "Mag In", "Heal In",
         "DoT In", "DoT Out", "Mana Consumption",
         "Attack Power", "Spell Power", "Crit Modifier"
+    ];
+    // Stat names that map to EnemySecondaryStats fields via calculate_enemy_changes
+    let enemy_options = vec![
+        "All In", "Phy In", "Mag In", "DoT In", "Heal In",
+        "All Out", "Phy Out", "Mag Out", "DoT Out", "Heal Out",
+        "Crit Chance", "Crit Modifier", "Haste", "Dodge",
     ];
 
     let update_skill_at = {
@@ -64,7 +70,8 @@ pub fn skills(props: &SkillProps) -> Html {
                             let is_crit = *is_crit;
                             let up_cb = update_skill_at.clone();
 
-                            let res = skill.compute(&settings.weapon, &settings.secondary_stats, is_crit);
+                            let enemy_mod = enemy_incoming_modifier(&skill.damage_type, &settings.enemy);
+                            let res = skill.compute(&settings.weapon, &settings.secondary_stats, is_crit) * enemy_mod;
 
                             html! {
                                 <>
@@ -184,20 +191,27 @@ pub fn skills(props: &SkillProps) -> Html {
                                                     p.push(CustomPassive::default());
                                                     up.emit((i, s.clone(), p.clone(), is_crit));
                                                 })
-                                            }>{"[+] Buff"}</button>
+                                            }>{"[+] Effect"}</button>
                                         </td>
                                     </tr>
 
 
                                     { for passives.iter().enumerate().map(|(p_idx, current_passive)| {
                                         let current_passive = current_passive.clone();
-                                        let stat_options = if current_passive.target_type == TargetType::Primary { &primary_options } else { &secondary_options };
+                                        let stat_options = match current_passive.target_type {
+                                            TargetType::Primary   => &primary_options,
+                                            TargetType::Secondary => &secondary_options,
+                                            TargetType::Enemy     => &enemy_options,
+                                        };
+                                        let is_debuff = current_passive.target_type == TargetType::Enemy;
 
                                         html! {
                                             <tr key={format!("skill-{}-buff-{}", i, p_idx)} class="skill-buff-row">
                                                 <td colspan="9">
                                                     <div class="buff-editor">
-                                                        <span class="buff-prefix">{format!("↳ Buff #{}", p_idx + 1)}</span>
+                                                        <span class="buff-prefix" style={if is_debuff { "color: #f85149;" } else { "" }}>
+                                                            { if is_debuff { format!("↳ Debuff #{}", p_idx + 1) } else { format!("↳ Buff #{}", p_idx + 1) } }
+                                                        </span>
 
 
                                                         <select onchange={
@@ -208,14 +222,27 @@ pub fn skills(props: &SkillProps) -> Html {
                                                                 let mut p_list = p_list.clone();
                                                                 if let Some(p) = p_list.get_mut(p_idx) {
                                                                     let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
-                                                                    p.target_type = if val == "Secondary" { TargetType::Secondary } else { TargetType::Primary };
-                                                                    p.stat_name = if val == "Secondary" { "Haste".to_string() } else { "Strength".to_string() };
+                                                                    match val.as_str() {
+                                                                        "Secondary" => {
+                                                                            p.target_type = TargetType::Secondary;
+                                                                            p.stat_name = "Haste".to_string();
+                                                                        },
+                                                                        "Enemy" => {
+                                                                            p.target_type = TargetType::Enemy;
+                                                                            p.stat_name = "All In".to_string();
+                                                                        },
+                                                                        _ => {
+                                                                            p.target_type = TargetType::Primary;
+                                                                            p.stat_name = "Strength".to_string();
+                                                                        }
+                                                                    }
                                                                     up.emit((i, s.clone(), p_list.clone(), is_crit));
                                                                 }
                                                             })
                                                         }>
                                                             <option value="Primary" selected={current_passive.target_type == TargetType::Primary}>{"Primary"}</option>
                                                             <option value="Secondary" selected={current_passive.target_type == TargetType::Secondary}>{"Secondary"}</option>
+                                                            <option value="Enemy" selected={current_passive.target_type == TargetType::Enemy}>{"Enemy Debuff"}</option>
                                                         </select>
 
 

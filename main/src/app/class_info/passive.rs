@@ -6,6 +6,7 @@ use crate::app::class_info::class::ClassSettings;
 pub enum TargetType {
     Primary,
     Secondary,
+    Enemy,
 }
 
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]

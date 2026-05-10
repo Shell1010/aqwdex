@@ -568,3 +568,97 @@ input[type="checkbox"] {
     border-color: rgba(248, 81, 73, 0.5);
     border-style: solid;
 }
+
+/* --- AQWDEX Centered Animated Title --- */
+.aqwdex-title {
+    /* Grid spanning logic */
+    grid-column: 1 / -1; 
+    text-align: center;
+    justify-self: center;
+
+    /* Spacing and Typography */
+    font-family: var(--font-terminal); /* Fira Code/Consolas stack */
+    font-size: 3rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 16px; /* High spacing for that "Dex" look */
+    margin: 10px 0 30px 0;
+    padding: 15px 0;
+    
+    position: relative;
+    display: block;
+    width: 100%;
+    
+    /* Base Color & Glow using accent variable */
+    color: var(--accent);
+    text-shadow: 0 0 15px var(--accent-glow);
+    
+    /* Moving Spark Gradient */
+    background: linear-gradient(
+        90deg, 
+        var(--accent) 0%, 
+        var(--accent) 42%, 
+        #fff 50%, 
+        var(--accent) 58%, 
+        var(--accent) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: spark-sweep 4s linear infinite;
+}
+
+/* Electricity Bolt "Flying" Effect */
+.aqwdex-title::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 5px;
+    width: 60px;
+    height: 2px;
+    background: #fff;
+    box-shadow: 
+        0 0 10px #fff, 
+        0 0 20px var(--accent), 
+        0 0 30px var(--accent);
+    filter: blur(1px);
+    opacity: 0;
+    animation: electricity-fly 5s ease-in-out infinite;
+}
+
+/* Glitch Shadow */
+.aqwdex-title::before {
+    content: "AQWDEX";
+    position: absolute;
+    top: 15px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: var(--accent);
+    opacity: 0.05;
+    z-index: -1;
+    animation: glitch-flicker 6s infinite;
+}
+
+/* --- Keyframes --- */
+
+/* Sweeps the white "spark" through the text */
+@keyframes spark-sweep {
+    to { background-position: 200% center; }
+}
+
+/* Flies the bolt across the center */
+@keyframes electricity-fly {
+    0% { transform: translateX(20vw); opacity: 0; }
+    5% { opacity: 1; }
+    25% { transform: translateX(80vw); opacity: 0; }
+    100% { transform: translateX(80vw); opacity: 0; }
+}
+
+/* Subtle terminal glitch/flicker[cite: 1] */
+@keyframes glitch-flicker {
+    0% { opacity: 0.05; transform: translate(0); }
+    1% { opacity: 0.2; transform: translate(-2px, 1px); }
+    2% { opacity: 0.05; transform: translate(0); }
+    100% { opacity: 0.05; }
+}

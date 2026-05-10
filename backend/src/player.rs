@@ -441,7 +441,7 @@ impl ClassModel {
                 dex_dodge + luk_dodge + wis_dodge + 4.0
             },
             ClassModel::PowerMelee => {
-                let dex_dodge = (primary.dexterity as f32) * 0.5 * player.efficiency();
+                let dex_dodge = (primary.dexterity as f32) * 0.3 * player.efficiency();
                 let wis_dodge = (primary.wisdom as f32) * 0.3 * player.efficiency();
                 let luk_dodge = (primary.luck as f32) * 0.1 * player.efficiency();
                 dex_dodge + luk_dodge + wis_dodge + 4.0

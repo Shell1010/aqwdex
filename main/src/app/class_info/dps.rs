@@ -1,6 +1,7 @@
 use yew::prelude::*;
-use crate::app::class_info::class::{ClassSettings, calculate_secondary_changes, calculate_primary_changes};
-use crate::app::class_info::passive::{CustomPassive};
+use crate::app::class_info::class::{ClassSettings, calculate_secondary_changes, calculate_primary_changes, calculate_enemy_changes, enemy_incoming_modifier};
+use crate::app::class_info::passive::{CustomPassive, TargetType};
+use backend::enemy::EnemySecondaryStats;
 
 #[derive(Clone, PartialEq)]
 pub enum RotationAction {
@@ -17,7 +18,7 @@ pub struct DpsProps {
 struct ActiveBuff {
     skill_idx: usize,
     passive_idx: usize,
-    remaining_ms: f32, // Track in milliseconds to match your u32 duration
+    remaining_ms: f32,
     passive: CustomPassive
 }
 
@@ -35,6 +36,7 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
     ]);
 
     let mut active_buffs: Vec<ActiveBuff> = Vec::new();
+    let mut active_enemy_debuffs: Vec<ActiveBuff> = Vec::new();
 
     let get_effective_stats = |actives: &Vec<ActiveBuff>| -> backend::player::SecondaryStats {
         let mut current_primary = settings.primary_stats.clone();
@@ -52,6 +54,14 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
         current_secondary
     };
 
+    let get_effective_enemy = |debuffs: &Vec<ActiveBuff>| -> EnemySecondaryStats {
+        let mut current_enemy = settings.enemy.clone();
+        for debuff in debuffs {
+            current_enemy = calculate_enemy_changes(&mut current_enemy, &debuff.passive);
+        }
+        current_enemy
+    };
+
     let duration = *test_duration;
     let mut time: f32 = 0.0;
 
@@ -65,11 +75,12 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
 
     let haste = (settings.secondary_stats.haste / 100.0).clamp(0.0, 0.50);
 
-    let compute_avg_dmg = |s_idx: usize, secondary: &backend::player::SecondaryStats| -> f32 {
+    let compute_avg_dmg = |s_idx: usize, secondary: &backend::player::SecondaryStats, enemy: &EnemySecondaryStats| -> f32 {
         let (skill, _, _) = &settings.skills[s_idx];
         let crit = (secondary.crit_chance / 100.0).clamp(0.0, 1.0);
-        let dmg_non_crit = skill.compute(&settings.weapon, secondary, false);
-        let dmg_crit = skill.compute(&settings.weapon, secondary, true);
+        let e_mod = enemy_incoming_modifier(&skill.damage_type, enemy);
+        let dmg_non_crit = skill.compute(&settings.weapon, secondary, false) * e_mod;
+        let dmg_crit = skill.compute(&settings.weapon, secondary, true) * e_mod;
         (dmg_non_crit * (1.0 - crit)) + (dmg_crit * crit)
     };
 
@@ -125,29 +136,50 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
                 true
             }
         });
+        active_enemy_debuffs.retain_mut(|b| {
+            if let Some(_) = b.passive.duration {
+                b.remaining_ms -= delta_ms;
+                b.remaining_ms > 0.0
+            } else {
+                true
+            }
+        });
 
         let current_secondary = get_effective_stats(&active_buffs);
+        let current_enemy = get_effective_enemy(&active_enemy_debuffs);
 
 
         let mut action_taken = false;
 
         if *is_auto_attack && time == next_aa_time {
-            total_dmg += compute_avg_dmg(0, &current_secondary);
+            total_dmg += compute_avg_dmg(0, &current_secondary, &current_enemy);
             cast_counts[0] += 1;
             let curr_h = (current_secondary.haste / 100.0).clamp(0.0, 0.50);
             let (aa_skill, aa_passives, _) = &settings.skills[0];
             for (p_idx, passive) in aa_passives.iter().enumerate() {
-                if let Some(existing) = active_buffs.iter_mut().find(|b| b.skill_idx == 0 && b.passive_idx == p_idx) {
-                    if let Some(d) = passive.duration {
-                        existing.remaining_ms = d as f32;
+                if passive.target_type == TargetType::Enemy {
+                    if let Some(existing) = active_enemy_debuffs.iter_mut().find(|b| b.skill_idx == 0 && b.passive_idx == p_idx) {
+                        if let Some(d) = passive.duration { existing.remaining_ms = d as f32; }
+                    } else {
+                        active_enemy_debuffs.push(ActiveBuff {
+                            skill_idx: 0, passive_idx: p_idx,
+                            remaining_ms: passive.duration.unwrap_or(0) as f32,
+                            passive: passive.clone(),
+                        });
                     }
                 } else {
-                    active_buffs.push(ActiveBuff {
-                        skill_idx: 0,
-                        passive_idx: p_idx,
-                        remaining_ms: passive.duration.unwrap_or(0) as f32,
-                        passive: passive.clone(),
-                    });
+                    if let Some(existing) = active_buffs.iter_mut().find(|b| b.skill_idx == 0 && b.passive_idx == p_idx) {
+                        if let Some(d) = passive.duration {
+                            existing.remaining_ms = d as f32;
+                        }
+                    } else {
+                        active_buffs.push(ActiveBuff {
+                            skill_idx: 0,
+                            passive_idx: p_idx,
+                            remaining_ms: passive.duration.unwrap_or(0) as f32,
+                            passive: passive.clone(),
+                        });
+                    }
                 }
             }
             cd_ready_at[0] = time + ((aa_skill.cd as f32 / 1000.0) * (1.0 - curr_h)).max(0.001);
@@ -162,22 +194,34 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
 
                         if s_idx == 0 && *is_auto_attack {
                         } else if time >= cd_ready_at[s_idx] && (s_idx == 0 || time >= gcd_ready_at) {
-                            total_dmg += compute_avg_dmg(s_idx, &current_secondary);
+                            total_dmg += compute_avg_dmg(s_idx, &current_secondary, &current_enemy);
                             cast_counts[s_idx] += 1;
 
                             let (_, skill_passives, _) = &settings.skills[s_idx];
                             for (p_idx, passive) in skill_passives.iter().enumerate() {
-                                if let Some(existing) = active_buffs.iter_mut().find(|b| b.skill_idx == s_idx && b.passive_idx == p_idx) {
-                                    if let Some(d) = passive.duration {
-                                        existing.remaining_ms = d as f32;
+                                if passive.target_type == TargetType::Enemy {
+                                    if let Some(existing) = active_enemy_debuffs.iter_mut().find(|b| b.skill_idx == s_idx && b.passive_idx == p_idx) {
+                                        if let Some(d) = passive.duration { existing.remaining_ms = d as f32; }
+                                    } else {
+                                        active_enemy_debuffs.push(ActiveBuff {
+                                            skill_idx: s_idx, passive_idx: p_idx,
+                                            remaining_ms: passive.duration.unwrap_or(0) as f32,
+                                            passive: passive.clone(),
+                                        });
                                     }
                                 } else {
-                                    active_buffs.push(ActiveBuff {
-                                        skill_idx: s_idx,
-                                        passive_idx: p_idx,
-                                        remaining_ms: passive.duration.unwrap_or(0) as f32,
-                                        passive: passive.clone(),
-                                    });
+                                    if let Some(existing) = active_buffs.iter_mut().find(|b| b.skill_idx == s_idx && b.passive_idx == p_idx) {
+                                        if let Some(d) = passive.duration {
+                                            existing.remaining_ms = d as f32;
+                                        }
+                                    } else {
+                                        active_buffs.push(ActiveBuff {
+                                            skill_idx: s_idx,
+                                            passive_idx: p_idx,
+                                            remaining_ms: passive.duration.unwrap_or(0) as f32,
+                                            passive: passive.clone(),
+                                        });
+                                    }
                                 }
                             }
                             let curr_h = (current_secondary.haste / 100.0).clamp(0.0, 0.50);

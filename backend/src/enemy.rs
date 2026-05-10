@@ -1,8 +1,8 @@
 use serde::{Serialize, Deserialize};
 
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SecondaryStats {
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub struct EnemySecondaryStats {
     pub phy_out: f32,
     pub phy_in: f32,
     pub mag_out: f32,
@@ -27,28 +27,28 @@ pub struct SecondaryStats {
     pub current_mp: i32,
 }
 
-impl SecondaryStats {
+impl EnemySecondaryStats {
     pub fn new() -> Self {
-        SecondaryStats {
-            phy_out: 0.0,
-            phy_in: 0.0,
-            mag_out: 0.0,
-            mag_in: 0.0,
-            dot_out: 0.0,
-            dot_in: 0.0,
-            heal_out: 0.0,
-            heal_in: 0.0,
-            all_in: 0.0,
-            all_out: 0.0,
+        EnemySecondaryStats {
+            phy_out: 100.0,
+            phy_in: 100.0,
+            mag_out: 100.0,
+            mag_in: 100.0,
+            dot_out: 100.0,
+            dot_in: 100.0,
+            heal_out: 100.0,
+            heal_in: 100.0,
+            all_in: 100.0,
+            all_out: 100.0,
             crit_chance: 15.0,
             crit_mod: 200.0,
-            mana_consumption: 0.0,
+            mana_consumption: 100.0,
             haste: 37.5,
             dodge: 10.0,
             hit_chance: 90.0,
             attack_power: 0.0,
             spell_power: 0.0,
-             hp: 0,
+            hp: 0,
             current_hp: 0,
             mp: 100,
             current_mp: 100
@@ -56,7 +56,7 @@ impl SecondaryStats {
         }
     }
 
-    pub fn add(&mut self, other: &SecondaryStats) {
+    pub fn add(&mut self, other: &EnemySecondaryStats) {
         self.phy_out += other.phy_out;
         self.phy_in += other.phy_in;
         self.mag_out += other.mag_out;
