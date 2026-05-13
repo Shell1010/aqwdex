@@ -34,19 +34,29 @@ jobs:
           git config --global user.name "shell1010"
           git config --global user.email "amin.dev03@gmail.com"
 
-      - name: Push to AQWHub Repository
-        uses: cpina/github-action-push-to-another-repository@main
+      - name: Manual Git Push to AQWHub
         env:
-          # This uses the secret you created in Step 3
-          API_TOKEN_GITHUB: ${{ secrets.AUTO_UPDATE_TOKEN }}
-        with:
-          # The 'dist' folder created by Trunk
-          source-directory: './main/dist'
-          destination-github-username: 'shell1010'
-          destination-repository-name: 'aqw_guide'
-          # This ensures the files land in the Digital Garden's static site folder
-          target-directory: 'src/site/aqwdex'
-          target-branch: main
+            # Use the secret you already created
+            API_TOKEN: ${{ secrets.AUTO_UPDATE_TOKEN }}
+        run: |
+            # 1. Setup Identity
+            git config --global user.email "YOUR_GITHUB_EMAIL@example.com"
+            git config --global user.name "shell1010"
+        
+            # 2. Clone the destination repo into a temp folder
+            git clone https://x-access-token:${API_TOKEN}@github.com/shell1010/aqwhub.git destination
+            
+            # 3. Copy build files to the destination
+            mkdir -p destination/src/site/aqwdex
+            rm -rf destination/src/site/aqwdex/*
+            cp -r main/dist/* destination/src/site/aqwdex/
+            
+            # 4. Commit and Push from the destination folder
+            cd destination
+            git add .
+            # Only commit if there are changes to avoid erroring out
+            git diff-index --quiet HEAD || git commit -m "Automated AQWDex Update"
+            git push origin main
 
       - name: Success Notification
         run: echo "AQWDex successfully synced to aqwhub.com/aqwdex"
