@@ -33,4 +33,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: ./main/dist # The folder Trunk creates
-          branch: gh-pages # The branch where the site lives
+          branch: main # The branch where the site lives
