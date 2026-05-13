@@ -65,6 +65,8 @@ pub fn passive_manager(props: &PassiveProps) -> Html {
         }
     });
 
+    
+
     html! {
         <div class="passive-manager">
             <h4>{"Passives"}</h4>

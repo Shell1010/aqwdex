@@ -8,6 +8,7 @@ use crate::app::class_info::{enhancement_picker::EnhancementPicker, passive::{Cu
 use crate::app::class_info::stats::StatDisplay;
 use crate::app::class_info::skills::Skills;
 use crate::app::class_info::passive::PassiveManager;
+use crate::app::class_info::buffs::BuffManager;
 use crate::app::class_info::enemy::EnemyPanel;
 use serde::{Serialize, Deserialize};
 
@@ -642,8 +643,8 @@ pub fn player_settings() -> Html {
                         </div>
                     </div>
                 <StatDisplay settings={(*settings).clone()} />
-                <PassiveManager settings={(*settings).clone()} on_update_passives={on_add_passive} />
-
+                <BuffManager settings={(*settings).clone()} on_update_passives={&on_add_passive} />
+                <PassiveManager settings={(*settings).clone()} on_update_passives={&on_add_passive} />
                 <hr />
 
 
