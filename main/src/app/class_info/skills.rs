@@ -54,7 +54,7 @@ pub fn skills(props: &SkillProps) -> Html {
                         <tr>
                             <th>{"#"}</th>
                             <th>{"Damage"}</th>
-                            <th>{"DSRC"}</th>
+                            <th>{"Function"}</th>
                             <th>{"Type"}</th>
                             <th>{"Target"}</th>
                             <th>{"CD (ms)"}</th>

@@ -1,9 +1,9 @@
 use serde::{Serialize, Deserialize};
 
+const MAX_LEVEL: f32 = 100.0;
+const GST_BASE: f32 = 12.0;
 
-const GST_BASE: u8 = 12;
-const STATS_EXPONENT: f32 = 1.33;
-const GST_TOTAL: u16 = 572;
+
 use crate::player::PrimaryStats;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
@@ -229,8 +229,6 @@ impl StatBlock {
 }
 
 pub fn gst_total(level: u32, rarity: u32) -> f32 {
-    const GST_BASE: f32 = 12.0;
-    const MAX_LEVEL: f32 = 100.0;
 
     let total = (level + rarity - 1) as f32;
     let value = GST_BASE + ((total * 560.0) / (MAX_LEVEL - 1.0));
