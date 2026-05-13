@@ -137,7 +137,7 @@ pub fn enhancement_picker(props: &PickerProps) -> Html {
 
     html! {
         <div class="picker-group">
-            <h3>{ &props.label }</h4>
+            <h3>{ &props.label }</h3>
             <label>{"Level"}</label>
             <input type="number" value={props.enhancement.level.to_string()} 
                 oninput={
