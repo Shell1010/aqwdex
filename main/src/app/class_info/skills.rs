@@ -107,15 +107,15 @@ pub fn skills(props: &SkillProps) -> Html {
                                                     }
                                                 })
                                             }>
-                                                <option value="AP1" selected={skill.dsrc == DamageSource::AP1}>{"AP1"}</option>
-                                                <option value="SP1" selected={skill.dsrc == DamageSource::SP1}>{"SP1"}</option>
-                                                <option value="AP2" selected={skill.dsrc == DamageSource::AP2}>{"AP2"}</option>
-                                                <option value="SP2" selected={skill.dsrc == DamageSource::SP2}>{"SP2"}</option>
-                                                <option value="APSP1" selected={skill.dsrc == DamageSource::APSP1}>{"APSP1"}</option>
-                                                <option value="APSP2" selected={skill.dsrc == DamageSource::APSP2}>{"APSP2"}</option>
-                                                <option value="cHPm" selected={skill.dsrc == DamageSource::cHPm}>{"cHPm"}</option>
-                                                <option value="intHP" selected={skill.dsrc == DamageSource::intHP}>{"intHP"}</option>
-                                                <option value="intMP" selected={skill.dsrc == DamageSource::intMP}>{"intMP"}</option>
+                                                <option value="AP1" selected={skill.dsrc == DamageSource::AP1}>{"AP"}</option>
+                                                <option value="SP1" selected={skill.dsrc == DamageSource::SP1}>{"SP"}</option>
+                                                <option value="AP2" selected={skill.dsrc == DamageSource::AP2}>{"AP * Range"}</option>
+                                                <option value="SP2" selected={skill.dsrc == DamageSource::SP2}>{"SP * Range"}</option>
+                                                <option value="APSP1" selected={skill.dsrc == DamageSource::APSP1}>{"AP + SP"}</option>
+                                                <option value="APSP2" selected={skill.dsrc == DamageSource::APSP2}>{"AP + SP * Range"}</option>
+                                                <option value="cHPm" selected={skill.dsrc == DamageSource::cHPm}>{"Max HP"}</option>
+                                                <option value="intHP" selected={skill.dsrc == DamageSource::intHP}>{"Current HP"}</option>
+                                                <option value="intMP" selected={skill.dsrc == DamageSource::intMP}>{"Current MP"}</option>
                                             </select>
                                         </td>
                                         <td>
