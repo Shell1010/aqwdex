@@ -27,7 +27,11 @@ jobs:
         # We build with --release for performance and smaller WASM size
         working-directory: ./main
         run: trunk build --release --public-url /aqwdex/
-        
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "shell1010"
+          git config --global user.email "amin.dev03@gmail.com"
 
       - name: Push to AQWHub Repository
         uses: cpina/github-action-push-to-another-repository@main
