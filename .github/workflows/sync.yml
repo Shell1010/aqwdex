@@ -36,7 +36,7 @@ jobs:
           API_TOKEN_GITHUB: ${{ secrets.AUTO_UPDATE_TOKEN }}
         with:
           # The 'dist' folder created by Trunk
-          source-directory: 'dist'
+          source-directory: './main/dist'
           destination-github-username: 'shell1010'
           destination-repository-name: 'aqw_guide'
           # This ensures the files land in the Digital Garden's static site folder
