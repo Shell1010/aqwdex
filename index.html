@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AQWDex</title>
+    
+    <link rel="stylesheet" href="static/style.css" />
+
+<link rel="modulepreload" href="/aqwdex/main-24c20dc0f3ae6317.js" crossorigin="anonymous" integrity="sha384-FKBWw6pGUXAlH8cyTO3xrR3su5Ymw2SUWMyblOsy88yu0SP+bPJIrsNz3zXdQ+Py"><link rel="preload" href="/aqwdex/main-24c20dc0f3ae6317_bg.wasm" crossorigin="anonymous" integrity="sha384-qseqL5doYiTngwaWrUp/3lzY/x+RxLvU3wzlnOtJw5F97Cl0paWLl3VXa4jFkDVA" as="fetch" type="application/wasm"></head>
+<body>
+    <div id="root"></div>
+    <script type="module">
+        import init from "./pkg/aqwdex.js";
+        init();
+    </script>
+
+<script type="module">
+import init, * as bindings from '/aqwdex/main-24c20dc0f3ae6317.js';
+const wasm = await init({ module_or_path: '/aqwdex/main-24c20dc0f3ae6317_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script></body>
+</html>
