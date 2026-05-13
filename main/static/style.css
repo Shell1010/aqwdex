@@ -91,9 +91,9 @@ body {
 input[type="text"],
 input[type="number"],
 select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
+    /*-webkit-appearance: none;*/
+    /*-moz-appearance: none;*/
+    /*appearance: none;*/
     background-color: var(--bg-input);
     color: var(--text-main);
     border: 1px solid var(--border-color);
