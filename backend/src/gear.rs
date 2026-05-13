@@ -58,19 +58,68 @@ pub enum EnhancementPattern {
     Anima,
 }
 
+
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug, Copy, Default)]
+pub enum Trait {
+    #[default]
+    None,
+    Clairvoyance,
+    Vainglory,
+    Absolution,
+    Penitence,
+    Lament,
+    Avarice,
+    Ether,
+}
+
+impl Trait {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Trait::None => "None",
+            Trait::Clairvoyance => "Clairvoyance",
+            Trait::Vainglory => "Vainglory",
+            Trait::Absolution => "Absolution",
+            Trait::Penitence => "Penitence",
+            Trait::Lament => "Lament",
+            Trait::Avarice => "Avarice",
+            Trait::Ether => "Ether"
+        }
+    }
+}
+
+impl Trait {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "None" => Some(Trait::None),
+            "Clairvoyance" => Some(Trait::Clairvoyance),
+            "Vainglory" => Some(Trait::Vainglory),
+            "Absolution" => Some(Trait::Absolution),
+            "Penitence" => Some(Trait::Penitence),
+            "Lament" => Some(Trait::Lament),
+            "Avarice" => Some(Trait::Avarice),
+            "Ether" => Some(Trait::Ether),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Default)]
 pub struct Enhancement {
     pub level: u32,
     pub rarity: u32,
     pub pattern: EnhancementPattern,
+    
+    pub r#trait: Trait
 }
 
 impl Enhancement {
-    pub fn new(level: u32, rarity: u32, pattern_id: &str) -> Option<Self> {
+    pub fn new(level: u32, rarity: u32, pattern_id: &str, trait_id: &str) -> Option<Self> {
+        let trait_ = Trait::from_str(trait_id)?;
         EnhancementPattern::from_str(pattern_id).map(|pattern| Self {
             level,
             rarity,
             pattern,
+            r#trait: trait_
         })
     }
 }
@@ -298,7 +347,7 @@ mod tests {
 
     #[test]
     fn test_get_stats() {
-        let enh = Enhancement::new(100, 6, "anima").unwrap(); // Pattern 3 = Thief
+        let enh = Enhancement::new(100, 6, "anima", "None").unwrap(); // Pattern 3 = Thief
         let slot = GearSlot::Helm;
 
         let stats = get_stats(&enh, slot);

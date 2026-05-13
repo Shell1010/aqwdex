@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use crate::app::class_info::build_manager::BuildManager;
 use crate::app::class_info::dps::DpsCalculator;
-use backend::{damage::{Skill, Type, Weapon, WeaponBoost}, enemy::EnemySecondaryStats, gear::{ Enhancement, EnhancementPattern, GearSlot, get_stats}, player::{Class, ClassModel, Player, PrimaryStats, SecondaryStats}};
+use backend::{damage::{Skill, Type, Weapon, WeaponBoost}, enemy::EnemySecondaryStats, gear::{ Enhancement, EnhancementPattern, GearSlot, get_stats, Trait}, player::{Class, ClassModel, Player, PrimaryStats, SecondaryStats}};
 use gloo_console::log;
 use yew::prelude::*;
 use crate::app::class_info::{enhancement_picker::EnhancementPicker, passive::{CustomPassive, OperationType, TargetType}};
@@ -48,10 +48,10 @@ impl Equipment {
 impl Default for Equipment {
     fn default() -> Self {
         Equipment {
-            helm:  Enhancement { level: 100, rarity: 6, pattern: EnhancementPattern::Anima },
-            cape: Enhancement { level: 100, rarity: 6, pattern: EnhancementPattern::Forge },
-            weapon: Enhancement { level: 100, rarity: 6, pattern: EnhancementPattern::Forge },
-            class: Enhancement { level: 100, rarity: 5, pattern: EnhancementPattern::Lucky },
+            helm:  Enhancement { level: 100, rarity: 6, pattern: EnhancementPattern::Anima, r#trait: Trait::None },
+            cape: Enhancement { level: 100, rarity: 6, pattern: EnhancementPattern::Forge, r#trait: Trait::None },
+            weapon: Enhancement { level: 100, rarity: 6, pattern: EnhancementPattern::Forge, r#trait: Trait::None },
+            class: Enhancement { level: 100, rarity: 5, pattern: EnhancementPattern::Lucky, r#trait: Trait::None },
         }
     }
 }
@@ -544,21 +544,25 @@ pub fn player_settings() -> Html {
                             label="Helm"
                             enhancement={settings.equipment.helm.clone()}
                             on_change={make_callback("helm")}
+                            on_update_passives={&on_add_passive}
                         />
                         <EnhancementPicker
                             label="Cape"
                             enhancement={settings.equipment.cape.clone()}
                             on_change={make_callback("cape")}
+                            on_update_passives={&on_add_passive}
                         />
                         <EnhancementPicker
                             label="Weapon"
                             enhancement={settings.equipment.weapon.clone()}
                             on_change={make_callback("weapon")}
+                            on_update_passives={&on_add_passive}
                         />
                         <EnhancementPicker
                             label="Class"
                             enhancement={settings.equipment.class.clone()}
                             on_change={make_callback("class")}
+                            on_update_passives={&on_add_passive}
                         />
                     </div>
                     <div class="weapon-config">
