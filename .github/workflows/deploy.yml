@@ -29,6 +29,28 @@ jobs:
         working-directory: ./main
         run: trunk build --release --public-url /aqwdex/
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "shell1010"
+          git config --global user.email "amin.dev03@gmail.com"
+
+      - name: Push to AQWHub Repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          # This uses the secret you created in Step 3
+          API_TOKEN_GITHUB: ${{ secrets.AUTO_UPDATE_TOKEN }}
+        with:
+          # The 'dist' folder created by Trunk
+          source-directory: './main/dist'
+          destination-github-username: 'shell1010'
+          destination-repository-name: 'aqw_guide'
+          # This ensures the files land in the Digital Garden's static site folder
+          target-directory: 'src/site/aqwdex'
+          target-branch: main
+
+      - name: Success Notification
+        run: echo "AQWDex successfully synced to aqwhub.com/aqwdex"
+
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
