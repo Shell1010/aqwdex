@@ -1,5 +1,6 @@
 use yew::prelude::*;
 use backend::gear::{Enhancement, EnhancementPattern, Trait};
+use backend::damage::Skill;
 use crate::app::class_info::passive::{CustomPassive, OperationType, TargetType};
 
 
@@ -9,6 +10,7 @@ pub struct PickerProps {
     pub enhancement: Enhancement,
     pub on_change: Callback<Enhancement>,
     pub on_update_passives: Callback<Vec<CustomPassive>>,
+    pub on_update_skills: Callback<Vec<(Skill, Vec<CustomPassive>, bool)>>,
 }
 
 fn get_passives_for_trait(tra: Trait) -> Vec<CustomPassive> {

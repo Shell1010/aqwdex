@@ -1,11 +1,50 @@
 use yew::prelude::*;
 use crate::app::class_info::class::{ClassSettings};
 use crate::app::class_info::passive::{CustomPassive, TargetType, OperationType};
+use crate::push_passives;
+
 
 #[derive(Properties, PartialEq)]
 pub struct BuffProps {
     pub settings: ClassSettings,
     pub on_update_passives: Callback<Vec<CustomPassive>>,
+}
+
+pub fn get_buff_list() -> Vec<&'static str> {
+    // Every single buff in the match statement
+    vec![
+        "None",
+        "Empowerment",
+        "Resurgence",
+        "Clarity",
+        "Depravity",
+        "Clarity Cordial",
+        "Dragonheart Philtre",
+        "Endurance Draught",
+        "Felicitous Philtre",
+        "Fleet Foot Philtre",
+        "Honor Potion",
+        "Potent Honor Potion",
+        "Body Tonic",
+        "Fate Tonic",
+        "Wise Tonic",
+        "Mastery Tonic",
+        "Might Tonic",
+        "Sage Tonic",
+        "Unstable Body Tonic",
+        "Unstable Fate Tonic",
+        "Unstable Wise Tonic",
+        "Unstable Mastery Tonic",
+        "Unstable Might Tonic",
+        "Unstable Sage Tonic",
+        "Destruction Elixir",
+        "Divine Elixir",
+        "Potent Battle Elixir",
+        "Potent Destruction Elixir",
+        "Potent Malevolence Elixir",
+        "Unstable Battle Elixir",
+        "Unstable Malevolence Elixir",
+    ]
 }
 
 #[function_component(BuffManager)]
@@ -30,8 +69,171 @@ pub fn buff_manager(props: &BuffProps) -> Html {
                         duration: None,
                     });
                 }
+            },
+            "Resurgence" => {
+                push_passives!(list,
+                    Secondary, "All Out" => 30.0;
+                    Secondary, "All In" => 30.0;
+                );
+                
+            },
+            "Clarity" => {
+                push_passives!(list,
+                    Secondary, "Haste" => 30.0;
+                    Secondary, "Hit Chance" => 30.0;
+                    Secondary, "Crit Modifier" => 30.0;
+                );
+            },
+            "Depravity" => {
+                push_passives!(list,
+                    Secondary, "All Out" => 30.0;
+                    Secondary, "Crit Chance" => 30.0;
+                    Secondary, "Dodge Chance" => 30.0;
+                    Secondary, "Haste" => 20.0;
+                    Secondary, "Crit Modifier" => 30.0;
+                );
+            },
+            "Clarity Cordial" => {
+                push_passives!(list,
+                    Primary, "Wisdom" => 1.5, Multi;
+                );
+            },
+            "Dragonheart Philtre" => {
+                push_passives!(list,
+                    Secondary, "Mana Consumption" => -50.0; 
+                );
+            },
+            "Endurance Draught" => {
+                push_passives!(list,
+                    Primary, "Endurance" => 1.5, Multi;
+                );
+            },
+            "Felicitous Philtre" => {
+                push_passives!(list,
+                    Primary, "Luck" => 1.5, Multi;
+                );
+            },
+            "Fleet Foot Philtre" => {
+                push_passives!(list,
+                    Secondary, "Haste" => 15.0;
+                    Secondary, "Evasion" => 50.0;
+                );
+            },
+            "Honor Potion" => {
+                push_passives!(list,
+                    Secondary, "All Out" => 50.0;
+                    Secondary, "Mana Consumption" => 15.0;
+                );
+            },
+            "Potent Honor Potion" => {
+                push_passives!(list,
+                    Secondary, "All Out" => 75.0;
+                    Secondary, "Mana Consumption" => 25.0;
+                );
+            },
+            "Body Tonic" => {
+                push_passives!(list,
+                    Primary, "Endurance" => 1.2, Multi;
+                );
+            },
+            "Fate Tonic" => {
+                push_passives!(list,
+                    Primary, "Luck" => 1.2, Multi;
+                );
+            },
+            "Mastery Tonic" => {
+                push_passives!(list,
+                    Primary, "Dexterity" => 1.2, Multi;
+                );
+            },
+            "Might Tonic" => {
+                push_passives!(list,
+                    Primary, "Strength" => 1.2, Multi;
+                );
+            },
+            "Wise Tonic" => {
+                push_passives!(list,
+                    Primary, "Wisdom" => 1.2, Multi;
+                );
+            },
+            "Sage Tonic" => {
+                push_passives!(list,
+                    Primary, "Intelligence" => 1.2, Multi;
+                );
+            },
+            "Unstable Body Tonic" => {
+                push_passives!(list,
+                    Primary, "Endurance" => 1.22, Multi;
+                    Primary, "Luck" => 0.9, Multi;
+                );
+            },
+            "Unstable Fate Tonic" => {
+                push_passives!(list,
+                    Primary, "Luck" => 1.22, Multi;
+                    Primary, "Endurance" => 0.9, Multi;
+                );
+            },
+            "Unstable Mastery Tonic" => {
+                push_passives!(list,
+                    Primary, "Dexterity" => 1.22, Multi;
+                    Primary, "Endurance" => 0.9, Multi;
+                );
+            },
+            "Unstable Might Tonic" => {
+                push_passives!(list,
+                    Primary, "Strength" => 1.22, Multi;
+                    Primary, "Endurance" => 0.9, Multi;
+                );
+            },
+            "Unstable Sage Tonic" => {
+                push_passives!(list,
+                    Primary, "Intelligence" => 1.22, Multi;
+                    Primary, "Endurance" => 0.9, Multi;
+                );
+            },
+            "Unstable Wise Tonic" => {
+                push_passives!(list,
+                    Primary, "Wisdom" => 1.22, Multi;
+                    Primary, "Endurance" => 0.9, Multi;
+                );
+            },
+            "Destruction Elixir" => {
+                push_passives!(list,
+                    Secondary, "Crit Modifier" => 30.0;
+                );
+            },
+            "Divine Elixir" => {
+                push_passives!(list,
+                    Secondary, "Heal Out" => 35.0;
+                );
+            },
+            "Potent Battle Elixir" => {
+                push_passives!(list,
+                    Secondary, "Phy Out" => 25.0;
+                );
             }
-            
+            "Potent Destruction Elixir" => {
+                push_passives!(list,
+                    Secondary, "Crit Modifier" => 50.0;
+                );
+            },
+            "Potent Malevolence Elixir" => {
+                push_passives!(list,
+                    Secondary, "Mag Out" => 25.0;
+                );
+            },
+            "Unstable Battle Elixir" => {
+                push_passives!(list,
+                    Secondary, "Phy Out" => 28.0;
+                    Secondary, "Critical Chance" => -10.0;
+                );
+            },
+            "Unstable Malevolence Elixir" => {
+                push_passives!(list,
+                    Secondary, "Mag Out" => 28.0;
+                    Secondary, "Critical Chance" => -10.0;
+                );
+            },
             _ => {}
         }
         
@@ -52,7 +254,15 @@ pub fn buff_manager(props: &BuffProps) -> Html {
                     onchange={on_add_preset}
                 >
                     <option value="" disabled=true selected=true>{"Select Buff"}</option>
-                    <option value="Empowerment">{"Empowerment (+20% Primary Stats)"}</option>
+                    {
+                        get_buff_list().into_iter().map(|name| {
+                            html! {
+                                <option 
+                                    value={name}
+                                >{name}</option>
+                            }
+                        }).collect::<Html>()
+                    }
                     
                 </select>
             </div>

@@ -545,24 +545,28 @@ pub fn player_settings() -> Html {
                             enhancement={settings.equipment.helm.clone()}
                             on_change={make_callback("helm")}
                             on_update_passives={&on_add_passive}
+                            on_update_skills={&on_update_skills}
                         />
                         <EnhancementPicker
                             label="Cape"
                             enhancement={settings.equipment.cape.clone()}
                             on_change={make_callback("cape")}
                             on_update_passives={&on_add_passive}
+                            on_update_skills={&on_update_skills}
                         />
                         <EnhancementPicker
                             label="Weapon"
                             enhancement={settings.equipment.weapon.clone()}
                             on_change={make_callback("weapon")}
                             on_update_passives={&on_add_passive}
+                            on_update_skills={&on_update_skills}
                         />
                         <EnhancementPicker
                             label="Class"
                             enhancement={settings.equipment.class.clone()}
                             on_change={make_callback("class")}
                             on_update_passives={&on_add_passive}
+                            on_update_skills={&on_update_skills}
                         />
                     </div>
                     <div class="weapon-config">
