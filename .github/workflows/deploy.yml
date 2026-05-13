@@ -44,7 +44,7 @@ jobs:
             git config --global user.name "shell1010"
         
             # 2. Clone the destination repo into a temp folder
-            git clone https://x-access-token:${API_TOKEN}@github.com/shell1010/aqwhub.git destination
+            git clone https://x-access-token:${API_TOKEN}@github.com/shell1010/aqw_guide.git destination
             
             # 3. Copy build files to the destination
             mkdir -p destination/src/site/aqwdex
