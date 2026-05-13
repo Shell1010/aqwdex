@@ -41,7 +41,7 @@ jobs:
           destination-repository-name: 'aqw_guide'
           # This ensures the files land in the Digital Garden's static site folder
           target-directory: 'src/site/aqwdex'
-          user-email: github-actions@github.com
+          user-email: amin.dev03@gmail.com
           target-branch: main
 
       - name: Success Notification
