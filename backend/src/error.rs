@@ -15,6 +15,9 @@ pub enum BackendError {
     InvalidDamageSource(String),
     
     #[error("invalid damage type: {0}")]
-    InvalidDamageType(String)
+    InvalidDamageType(String),
+
+    #[error("invalid target type: {0}")]
+    InvalidTargetType(String),
 }
 

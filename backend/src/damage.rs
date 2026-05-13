@@ -176,6 +176,19 @@ pub enum Target {
     Friendly
 }
 
+impl FromStr for Target {
+    type Err = BackendError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Self" => Ok(Target::Yourself),
+            "Friendly" => Ok(Target::Friendly),
+            "Enemy" => Ok(Target::Enemy),
+            e => Err(BackendError::InvalidTargetType(format!("Error: {e} ")))
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ForceResult {
     Hit,

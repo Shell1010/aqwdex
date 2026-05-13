@@ -2,7 +2,7 @@ use std::str::FromStr;
 use yew::prelude::*;
 use crate::app::class_info::class::{ClassSettings, enemy_incoming_modifier};
 use crate::app::class_info::passive::{CustomPassive, TargetType, OperationType};
-use backend::damage::{DamageSource, Skill, Type};
+use backend::damage::{DamageSource, Skill, Type, Target};
 
 #[derive(Properties, PartialEq)]
 pub struct SkillProps {
@@ -56,6 +56,7 @@ pub fn skills(props: &SkillProps) -> Html {
                             <th>{"Damage"}</th>
                             <th>{"DSRC"}</th>
                             <th>{"Type"}</th>
+                            <th>{"Target"}</th>
                             <th>{"CD (ms)"}</th>
                             <th>{"MP"}</th>
                             <th>{"Crit?"}</th>
@@ -135,6 +136,25 @@ pub fn skills(props: &SkillProps) -> Html {
                                                 <option value="Magical" selected={skill.damage_type == Type::Magical}>{"Magical"}</option>
                                                 <option value="TrueDamage" selected={skill.damage_type == Type::TrueDamage}>{"True"}</option>
                                                 <option value="DamageOverTime" selected={skill.damage_type == Type::DamageOverTime}>{"DoT"}</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select onchange={
+                                                let s = skill.clone();
+                                                let p = passives.clone();
+                                                let up = up_cb.clone();
+                                                Callback::from(move |e: Event| {
+                                                    let mut s = s.clone();
+                                                    let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
+                                                    if let Ok(t) = Target::from_str(&val) {
+                                                        s.target = t;
+                                                        up.emit((i, s.clone(), p.clone(), is_crit));
+                                                    }
+                                                })
+                                            }>
+                                                <option value="Self" selected={skill.target == Target::Yourself}>{"Self"}</option>
+                                                <option value="Enemy" selected={skill.target == Target::Enemy}>{"Enemy"}</option>
+                                                <option value="Friendly" selected={skill.target == Target::Friendly}>{"Friendly"}</option>
                                             </select>
                                         </td>
                                         <td>

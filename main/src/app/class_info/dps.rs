@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use crate::app::class_info::class::{ClassSettings, calculate_secondary_changes, calculate_primary_changes, calculate_enemy_changes, enemy_incoming_modifier};
 use crate::app::class_info::passive::{CustomPassive, TargetType};
-use backend::enemy::EnemySecondaryStats;
+use backend::{damage::Target, enemy::EnemySecondaryStats};
 
 #[derive(Clone, PartialEq)]
 pub enum RotationAction {
@@ -77,6 +77,9 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
 
     let compute_avg_dmg = |s_idx: usize, secondary: &backend::player::SecondaryStats, enemy: &EnemySecondaryStats| -> f32 {
         let (skill, _, _) = &settings.skills[s_idx];
+        if skill.target == Target::Yourself {
+            return 0.0
+        }
         let crit = (secondary.crit_chance / 100.0).clamp(0.0, 1.0);
         let e_mod = enemy_incoming_modifier(&skill.damage_type, enemy);
         let dmg_non_crit = skill.compute(&settings.weapon, secondary, false) * e_mod;
