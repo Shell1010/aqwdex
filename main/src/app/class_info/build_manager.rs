@@ -1,4 +1,5 @@
 use yew::prelude::*;
+use wasm_bindgen_futures::spawn_local;
 use crate::app::class_info::class::ClassSettings;
 use crate::app::storage::{load_all_builds, save_all_builds};
 
@@ -11,59 +12,87 @@ pub struct BuildManagerProps {
 #[function_component(BuildManager)]
 pub fn build_manager(props: &BuildManagerProps) -> Html {
 
-    let saved_names = use_state(|| {
-        let builds = load_all_builds();
-        let mut names: Vec<String> = builds.keys().cloned().collect();
-        names.sort();
-        names
-    });
+    let saved_names = use_state(Vec::<String>::new);
 
+    // ── Load saved build names on first mount ────────────────────────────────
+    {
+        let saved_names = saved_names.clone();
+        use_effect_with((), move |_| {
+            spawn_local(async move {
+                let builds = load_all_builds().await;
+                let mut names: Vec<String> = builds.keys().cloned().collect();
+                names.sort();
+                saved_names.set(names);
+            });
+            || ()
+        });
+    }
+
+    // ── Save current settings ────────────────────────────────────────────────
     let on_save = {
         let saved_names = saved_names.clone();
         let current_settings = props.current_settings.clone();
-    
+
         Callback::from(move |_| {
-            let mut builds = load_all_builds();
-            let base_name = if current_settings.name.trim().is_empty() { "New Build".to_string() } else { current_settings.name.trim().to_string() };
-            
-            let mut unique_name = base_name.to_string();
-            let mut counter = 1;
-            while builds.contains_key(&unique_name) {
-                unique_name = format!("{}-{}", base_name, counter);
-                counter += 1;
-            }
-    
-            builds.insert(unique_name, current_settings.clone());
-            save_all_builds(&builds);
-    
-            let mut names: Vec<String> = builds.keys().cloned().collect();
-            names.sort();
-            saved_names.set(names);
+            let saved_names = saved_names.clone();
+            let current_settings = current_settings.clone();
+
+            spawn_local(async move {
+                let mut builds = load_all_builds().await;
+                let base_name = if current_settings.name.trim().is_empty() {
+                    "New Build".to_string()
+                } else {
+                    current_settings.name.trim().to_string()
+                };
+
+                let mut unique_name = base_name.clone();
+                let mut counter = 1;
+                while builds.contains_key(&unique_name) {
+                    unique_name = format!("{}-{}", base_name, counter);
+                    counter += 1;
+                }
+
+                builds.insert(unique_name, current_settings.clone());
+                save_all_builds(&builds).await;
+
+                let mut names: Vec<String> = builds.keys().cloned().collect();
+                names.sort();
+                saved_names.set(names);
+            });
         })
     };
-    
+
+    // ── Load a named build ───────────────────────────────────────────────────
     let load_build = {
         let on_load_build = props.on_load_build.clone();
         move |name: String| {
-            let builds = load_all_builds();
-            if let Some(settings) = builds.get(&name) {
-                on_load_build.emit(settings.clone());
-            }
+            let on_load_build = on_load_build.clone();
+            spawn_local(async move {
+                let builds = load_all_builds().await;
+                if let Some(settings) = builds.get(&name) {
+                    on_load_build.emit(settings.clone());
+                }
+            });
         }
     };
 
+    // ── Delete a named build ─────────────────────────────────────────────────
     let delete_build = {
         let saved_names = saved_names.clone();
         move |name: String| {
-            let mut builds = load_all_builds();
-            builds.remove(&name);
-            save_all_builds(&builds);
-            let mut names: Vec<String> = builds.keys().cloned().collect();
-            names.sort();
-            saved_names.set(names);
+            let saved_names = saved_names.clone();
+            spawn_local(async move {
+                let mut builds = load_all_builds().await;
+                builds.remove(&name);
+                save_all_builds(&builds).await;
+                let mut names: Vec<String> = builds.keys().cloned().collect();
+                names.sort();
+                saved_names.set(names);
+            });
         }
     };
 
+    // ── Render ───────────────────────────────────────────────────────────────
     html! {
         <div class="build-manager">
             <div class="build-header">

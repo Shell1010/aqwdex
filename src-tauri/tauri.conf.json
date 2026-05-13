@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.aqwdex.dev",
   "build": {
-    "frontendDist": "./main/dist",
+    "frontendDist": "../main/dist",
     "devUrl": "http://localhost:8080",
     "beforeDevCommand": "cd main && trunk serve",
     "beforeBuildCommand": "cd main && trunk build"

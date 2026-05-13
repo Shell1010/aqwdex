@@ -44,7 +44,7 @@ impl DamageSource {
             DamageSource::AP2 => 2.0 * DamageSource::AP1.compute(weapon, stat) * weapon.range,
             DamageSource::SP1 => weapon.dps + (0.1 * stat.spell_power),
             DamageSource::SP2 => 2.0 * DamageSource::SP1.compute(weapon, stat) * weapon.range,
-            DamageSource::APSP1 => weapon.dps + (0.1 * DamageSource::AP1.compute(weapon, stat) ) + (0.1 * DamageSource::SP1.compute(weapon, stat)),
+            DamageSource::APSP1 => weapon.dps + (0.1 * stat.attack_power) + (0.1 * stat.spell_power),
             DamageSource::APSP2 => 2.0 * DamageSource::APSP1.compute(weapon, stat) * weapon.range,
             DamageSource::cHPm => stat.hp as f32,
             DamageSource::cMPm => stat.mp as f32,

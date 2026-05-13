@@ -1,0 +1,36 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ] # Runs every time you push to main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Download and install Trunk
+        run: |
+          wget -qO- https://github.com/trunk-rs/trunk/releases/latest/download/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
+          mv trunk /usr/local/bin/
+
+      - name: Build with Trunk
+        # IMPORTANT: Replace 'aqwdex' with your repo name if it's different
+        # This ensures links work on subfolders like shell1010.github.io/aqwdeex/
+        working-directory: ./main
+        run: trunk build --release --public-url /aqwdex/
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: ./main/dist # The folder Trunk creates
+          branch: gh-pages # The branch where the site lives

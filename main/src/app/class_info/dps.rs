@@ -253,7 +253,7 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
 
     html! {
         <div class="dps-calculator panel-right-section" style="margin-top: 20px;">
-            <h3>{format!("DPS Simulator {}", haste)}</h3>
+            <h3>{"DPS Simulator"}</h3>
 
             <div class="stats-screen">
                 <div class="stat-block">

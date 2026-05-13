@@ -1,45 +1,93 @@
-/* --- Global Variables for Terminal Theme --- */
-/* YES I COPED AND USED AI */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Global Variables — Terminal Theme                                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
 :root {
-    --bg-base: #0d1117; /* Deepest background */
-    --bg-panel: #161b22; /* Slightly lighter for panels */
-    --bg-input: #010409; /* Very dark for input boxes */
-    --text-main: #c9d1d9; /* Off-white text */
-    --text-muted: #8b949e; /* Gray for labels */
-    --accent: #58a6ff; /* Showdex/Terminal Blue */
+    --bg-base: #0d1117;
+    --bg-panel: #161b22;
+    --bg-input: #010409;
+    --text-main: #c9d1d9;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
     --accent-glow: rgba(88, 166, 255, 0.2);
     --border-color: #30363d;
+    --green: #7ee787;
+    --red: #ff7b72;
 
-    /* Font stack: Prioritizes Fira Code/Consolas for that Showdex/Terminal feel */
     --font-terminal:
         "Fira Code", "Consolas", "Monaco", "Courier New", monospace;
+
+    /* single source-of-truth for the compact rhythm */
+    --fs-xs: 9.5px;
+    --fs-sm: 10.5px;
+    --fs-md: 11.5px;
+    --pad-xs: 2px 5px;
+    --pad-sm: 3px 8px;
 }
 
-/* --- Base Body Settings --- */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Reset / Base                                                                */
+/* ─────────────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden; /* outer page never scrolls — panels scroll instead */
+}
+
 body {
     background-color: var(--bg-base);
     color: var(--text-main);
     font-family: var(--font-terminal);
-    margin: 0;
-    padding: 20px;
-    line-height: 1.5;
+    font-size: var(--fs-md);
+    line-height: 1.3;
+    padding: 5px 7px;
 }
 
-/* Typography Headings */
-.app-layout h2,
-.app-layout h3,
-.app-layout h4 {
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Typography                                                                 */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.app-layout h2 {
+    font-size: var(--fs-md);
     color: var(--accent);
-    margin-top: 0;
-    margin-bottom: 15px;
     text-transform: uppercase;
     letter-spacing: 1px;
     font-weight: 600;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 5px;
+    margin: 0 0 6px 0;
+    padding-bottom: 3px;
 }
 
-/* --- General Inputs & Selects --- */
+.app-layout h3 {
+    font-size: var(--fs-sm);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    margin: 0 0 5px 0;
+    padding-bottom: 2px;
+}
+
+.app-layout h4 {
+    font-size: var(--fs-xs);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    margin: 0 0 4px 0;
+    padding-bottom: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Inputs & Selects                                                           */
+/* ─────────────────────────────────────────────────────────────────────────── */
 input[type="text"],
 input[type="number"],
 select {
@@ -49,13 +97,15 @@ select {
     background-color: var(--bg-input);
     color: var(--text-main);
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 6px 10px;
+    border-radius: 3px;
+    padding: var(--pad-xs);
     font-family: var(--font-terminal);
-    font-size: 14px;
-    transition: all 0.2s ease-in-out;
+    font-size: var(--fs-sm);
+    line-height: 1.3;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
     width: 100%;
-    box-sizing: border-box;
 }
 
 input:focus,
@@ -65,7 +115,7 @@ select:focus {
     box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
-/* Removes arrows from number inputs for a cleaner look */
+/* Remove spinner arrows */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -75,75 +125,30 @@ input[type="number"] {
     -moz-appearance: textfield;
 }
 
-/* --- Layout Widgets --- */
-
-/* Basic row layout for name, level, class model */
-.input-field {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
+/* Compact checkbox */
+input[type="checkbox"] {
+    cursor: pointer;
+    accent-color: var(--accent);
+    width: 13px;
+    height: 13px;
 }
 
-.input-field label {
-    flex: 0 0 150px; /* Fixed width for labels to align inputs */
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-/* Enhancements Grid */
-.enhancement-config {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    background-color: var(--bg-base);
-    border: 1px solid var(--border-color);
-    padding: 15px;
-    border-radius: 4px;
-    margin: 20px 0;
-}
-
-/* Weapon Meta Grid */
-.weapon-config {
-    margin-bottom: 20px;
-}
-
-.weapon-config .input-grid {
-    display: grid;
-    grid-template-columns: 150px 1fr; /* Label then Input */
-    row-gap: 10px;
-    align-items: center;
-}
-
-.weapon-config .input-grid label {
-    color: var(--text-muted);
-}
-
-/* --- Horizontal Dividers --- */
-hr {
-    border: none;
-    border-top: 1px dashed var(--border-color);
-    margin: 30px 0;
-}
-
-/* --- Build Panel (Save/Load) --- */
-.build-panel {
-    background-color: var(--bg-base);
-    border: 1px solid var(--border-color);
-    padding: 15px;
-    border-radius: 4px;
-    margin-top: 20px;
-}
-
-/* General Button Styles (for your save/load/delete buttons) */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Buttons                                                                    */
+/* ─────────────────────────────────────────────────────────────────────────── */
 button {
     background-color: var(--bg-panel);
     color: var(--text-main);
     border: 1px solid var(--border-color);
-    padding: 6px 12px;
-    border-radius: 4px;
+    padding: var(--pad-xs);
+    border-radius: 3px;
     font-family: var(--font-terminal);
+    font-size: var(--fs-xs);
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        background-color 0.15s,
+        color 0.15s;
+    white-space: nowrap;
 }
 
 button:hover {
@@ -151,7 +156,6 @@ button:hover {
     color: #fff;
 }
 
-/* Highlighted Save/Action buttons */
 button.save-btn,
 button.add-row-btn {
     border-color: var(--accent);
@@ -164,141 +168,246 @@ button.add-row-btn:hover {
     color: var(--bg-base);
 }
 
-/* --- Scrollbars (Webkit) --- */
+.delete-btn {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid rgba(248, 81, 73, 0.3);
+    padding: 1px 5px;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+}
+
+.delete-btn:hover {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Scrollbars                                                                 */
+/* ─────────────────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 5px;
+    height: 5px;
 }
 ::-webkit-scrollbar-track {
     background: var(--bg-base);
 }
 ::-webkit-scrollbar-thumb {
     background: var(--border-color);
-    border-radius: 4px;
+    border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
 }
 
-/* --- Stats Screen Container --- */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  App Layout — full-viewport two-column grid                                 */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.app-layout {
+    display: grid;
+    grid-template-columns: 310px 1fr;
+    grid-template-rows: auto 1fr; /* title row then panels row */
+    gap: 6px;
+    height: calc(100vh - 14px); /* 2 × 7px body padding */
+    max-width: 1600px;
+    margin: 0 auto;
+    align-items: stretch; /* panels fill row height */
+}
+
+.panel-left,
+.panel-right {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 8px 10px;
+    overflow-y: auto;
+    min-height: 0; /* crucial — lets grid children shrink & scroll */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Horizontal Rule                                                            */
+/* ─────────────────────────────────────────────────────────────────────────── */
+hr {
+    border: none;
+    border-top: 1px dashed var(--border-color);
+    margin: 6px 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Right-Panel Sections  (enemy / skills / dps)                              */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.panel-right-section + .panel-right-section {
+    margin-top: 10px;
+    border-top: 1px dashed var(--border-color);
+    padding-top: 8px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Input Field Row  (label + input pairs)                                    */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.input-field {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.input-field label {
+    flex: 0 0 110px;
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Enhancement Grid                                                           */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.enhancement-config {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 6px;
+    background-color: var(--bg-base);
+    border: 1px solid var(--border-color);
+    padding: 6px;
+    border-radius: 3px;
+    margin: 6px 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Weapon Config                                                              */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.weapon-config {
+    margin-bottom: 10px;
+}
+
+.weapon-config .input-grid {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    row-gap: 4px;
+    align-items: center;
+}
+
+.weapon-config .input-grid label {
+    color: var(--text-muted);
+    font-size: var(--fs-sm);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Stats Screen  (grid of stat blocks)                                       */
+/* ─────────────────────────────────────────────────────────────────────────── */
 .stats-screen {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    margin: 25px 0;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 6px;
+    margin: 5px 0;
 }
 
-/* --- Individual Stat Blocks --- */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Stat Block                                                                 */
+/* ─────────────────────────────────────────────────────────────────────────── */
 .stat-block {
-    background-color: var(--bg-input); /* Deepest black for contrast */
+    background-color: var(--bg-input);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 15px 20px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Inner shadow for depth */
+    border-radius: 4px;
+    padding: 5px 8px;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Header inside the stat block */
 .stat-block h4 {
     color: var(--accent);
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 15px;
+    font-size: var(--fs-xs);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 1px dashed var(--border-color); /* Dashed lines feel more technical */
-    padding-bottom: 8px;
+    letter-spacing: 0.5px;
+    margin: 0 0 4px 0;
+    padding-bottom: 3px;
+    border-bottom: 1px dashed var(--border-color);
 }
 
 .stat-block h4::before {
     content: "[ ";
     color: var(--text-muted);
 }
-
 .stat-block h4::after {
     content: " ]";
     color: var(--text-muted);
 }
 
-/* --- Stat Rows --- */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Stat Rows                                                                  */
+/* ─────────────────────────────────────────────────────────────────────────── */
 .stat-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 6px;
-    margin-bottom: 2px;
-    border-radius: 3px;
-    transition: background-color 0.15s ease;
+    padding: 1px 3px;
+    border-radius: 2px;
+    transition: background-color 0.1s;
 }
 
-/* Subtle highlight when hovering over a row to make reading dense data easier */
 .stat-row:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.04);
 }
 
-/* --- Stat Typography --- */
 .stat-row .label {
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: var(--fs-xs);
     text-transform: capitalize;
 }
 
 .stat-row .value {
-    font-family: var(--font-terminal);
     font-weight: 600;
-    font-size: 14px;
-    /* Terminal green/cyan for the actual numbers to make them pop */
-    color: #7ee787;
-    text-shadow: 0 0 5px rgba(126, 231, 135, 0.2);
+    font-size: var(--fs-sm);
+    color: var(--green);
+    text-shadow: 0 0 4px rgba(126, 231, 135, 0.15);
 }
 
-/* --- Table General Styling --- */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Tables (passives & skills)                                                 */
+/* ─────────────────────────────────────────────────────────────────────────── */
 .passive-manager table,
 .skill-editor table {
     width: 100%;
     border-collapse: collapse;
-    margin: 15px 0;
-    font-size: 0.9rem;
+    margin: 6px 0;
+    font-size: var(--fs-sm);
     background-color: var(--bg-base);
     border: 1px solid var(--border-color);
 }
 
-/* Header Row */
 .passive-manager th,
 .skill-editor th {
     background-color: var(--bg-input);
     color: var(--accent);
     text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-    padding: 10px;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.3px;
+    padding: 3px 5px;
     text-align: left;
     border-bottom: 2px solid var(--border-color);
 }
 
-/* Table Cells */
 .passive-manager td,
 .skill-editor td {
-    padding: 8px;
+    padding: 2px 4px;
     border-bottom: 1px solid var(--border-color);
     vertical-align: middle;
 }
 
-/* Alternating Row Tint */
 .passive-manager tbody tr:nth-child(even),
 .skill-editor tbody tr:nth-child(even) {
     background-color: rgba(255, 255, 255, 0.02);
 }
 
-/* --- Table Inputs & Selects --- */
-/* Make inputs inside tables even more compact */
+/* Table inputs — invisible until hover/focus */
 .table-input,
 .passive-table select,
 .skill-editor select {
     background: transparent;
-    border: 1px solid transparent; /* Hidden until hover/focus */
-    padding: 4px 8px;
+    border: 1px solid transparent;
+    padding: 1px 4px;
     width: 100%;
     color: var(--text-main);
+    font-size: var(--fs-sm);
 }
 
 .table-input:hover,
@@ -315,59 +424,43 @@ button.add-row-btn:hover {
     outline: none;
 }
 
-/* --- Special Column Styling --- */
-
-/* Skill Damage Output Cell */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Damage Cell                                                                */
+/* ─────────────────────────────────────────────────────────────────────────── */
 .dmg-cell {
-    font-family: var(--font-terminal);
     font-weight: bold;
-    color: #7ee787; /* Terminal Green */
+    color: var(--green);
     text-align: right;
-    padding-right: 15px !important;
+    padding-right: 10px !important;
+    font-size: var(--fs-sm);
 }
 
-/* Critical Hit Styling */
 .dmg-cell.crit {
-    color: #ff7b72; /* Showdex Red/Pink for crits */
-    text-shadow: 0 0 8px rgba(255, 123, 114, 0.3);
+    color: var(--red);
+    text-shadow: 0 0 6px rgba(255, 123, 114, 0.25);
 }
 
 .dmg-cell.crit::before {
     content: "★ ";
-    font-size: 0.8rem;
+    font-size: var(--fs-xs);
 }
 
-/* --- Actions & Buttons --- */
-
-/* Delete Button */
-.delete-btn {
-    background: transparent;
-    color: #f85149;
-    border: 1px solid rgba(248, 81, 73, 0.3);
-    padding: 2px 8px;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    transition: all 0.2s;
-}
-
-.delete-btn:hover {
-    background: #f85149;
-    color: white;
-    border-color: #f85149;
-}
-
-/* Add Row Button */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Add Row Button                                                             */
+/* ─────────────────────────────────────────────────────────────────────────── */
 .add-row-btn {
     display: block;
     width: 100%;
-    margin-top: 10px;
-    padding: 8px;
+    margin-top: 5px;
+    padding: 4px;
     background-color: var(--bg-input);
     border: 1px dashed var(--accent);
     color: var(--accent);
-    font-size: 0.8rem;
+    font-size: var(--fs-xs);
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        background-color 0.15s,
+        border-style 0.15s;
 }
 
 .add-row-btn:hover {
@@ -375,87 +468,92 @@ button.add-row-btn:hover {
     border-style: solid;
 }
 
-/* Compact Checkbox Styling */
-input[type="checkbox"] {
-    cursor: pointer;
-    accent-color: var(--accent);
-    width: 16px;
-    height: 16px;
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Build Panel (outer wrapper from player_settings)                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.build-panel {
+    background-color: var(--bg-base);
+    border: 1px solid var(--border-color);
+    padding: 6px;
+    border-radius: 3px;
+    margin-top: 6px;
 }
 
-/* --- Build Manager Container --- */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Build Manager                                                              */
+/* ─────────────────────────────────────────────────────────────────────────── */
 .build-manager {
     background-color: var(--bg-panel);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 15px;
-    margin-top: 20px;
+    border-radius: 4px;
+    padding: 6px 8px;
 }
 
 .build-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 6px;
 }
 
-/* --- The "Directory" List --- */
+.build-header h4 {
+    margin: 0;
+    border: none;
+    padding: 0;
+}
+
 .build-directory {
     background-color: var(--bg-input);
     border: 1px solid var(--border-color);
-    max-height: 250px;
+    max-height: 110px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
 
-/* Individual Build Row */
 .build-item {
     display: flex;
     align-items: center;
-    padding: 8px 12px;
+    padding: 3px 7px;
     border-bottom: 1px solid rgba(48, 54, 61, 0.5);
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.15s;
 }
 
 .build-item:hover {
-    background-color: rgba(88, 166, 255, 0.1);
+    background-color: rgba(88, 166, 255, 0.08);
 }
 
 .build-icon {
-    margin-right: 10px;
-    font-size: 12px;
-    opacity: 0.7;
+    margin-right: 6px;
+    font-size: var(--fs-xs);
+    opacity: 0.6;
 }
 
 .build-name {
     flex-grow: 1;
-    font-family: var(--font-terminal);
-    font-size: 14px;
+    font-size: var(--fs-sm);
     color: var(--text-main);
 }
 
-/* Actions inside the row */
 .build-item-actions {
     display: flex;
-    gap: 8px;
-    opacity: 0.3; /* Hidden until hover */
-    transition: opacity 0.2s;
+    gap: 4px;
+    opacity: 0.2;
+    transition: opacity 0.15s;
 }
 
 .build-item:hover .build-item-actions {
     opacity: 1;
 }
 
-/* Mini buttons for the directory */
 .mini-load-btn,
 .mini-delete-btn {
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: var(--fs-xs);
+    padding: 1px 4px;
     background: transparent;
     border: 1px solid var(--border-color);
-    border-radius: 3px;
+    border-radius: 2px;
     color: var(--text-muted);
 }
 
@@ -464,20 +562,19 @@ input[type="checkbox"] {
     border-color: var(--accent);
 }
 .mini-delete-btn:hover {
-    color: #f85149;
-    border-color: #f85149;
+    color: var(--red);
+    border-color: var(--red);
 }
 
-/* --- Export/Import Bar --- */
 .build-io {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 15px;
+    gap: 5px;
+    margin-top: 6px;
 }
 
 .io-btn {
-    font-size: 11px;
+    font-size: var(--fs-xs);
     text-transform: uppercase;
     background: var(--bg-input);
     border: 1px dashed var(--border-color);
@@ -489,73 +586,47 @@ input[type="checkbox"] {
     color: var(--accent);
 }
 
-/* --- Two-Column Layout --- */
-.app-layout {
-    display: grid;
-    grid-template-columns: 400px 1fr; /* Fixed left panel, expanding right panel */
-    gap: 20px;
-    align-items: start; /* Prevents panels from stretching vertically unnecessarily */
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-.panel-left,
-.panel-right {
-    background-color: var(--bg-panel);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 20px;
-}
-
-/* Ensure the right panel can scroll horizontally if the table gets too big */
-.panel-right {
-    overflow-x: auto;
-}
-
-/* --- Sub-Row Buff Editor --- */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Skill Buff / Debuff Sub-Rows                                               */
+/* ─────────────────────────────────────────────────────────────────────────── */
 .skill-buff-row {
-    background-color: rgba(
-        88,
-        166,
-        255,
-        0.05
-    ); /* Slight blue tint to indicate nesting */
+    background-color: rgba(88, 166, 255, 0.04);
 }
 
 .skill-buff-row td {
-    padding: 0 !important; /* Remove padding so the inner div controls it */
-    border-bottom: 2px solid var(--border-color) !important;
+    padding: 0 !important;
+    border-bottom: 1px solid var(--border-color) !important;
 }
 
 .buff-editor {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 15px;
-    font-size: 0.8rem;
+    gap: 5px;
+    padding: 2px 6px;
+    font-size: var(--fs-xs);
 }
 
 .buff-prefix {
     color: var(--accent);
-    font-family: var(--font-terminal);
     opacity: 0.8;
+    white-space: nowrap;
 }
 
-/* Make inputs inside the buff editor a bit wider so values aren't clipped */
 .buff-val-input {
-    max-width: 80px;
+    max-width: 60px;
     border-bottom: 1px dashed var(--accent) !important;
 }
 
-/* Buff Toggle Buttons */
 .buff-toggle-btn {
     background: transparent;
     color: var(--text-muted);
     border: 1px dashed var(--border-color);
-    padding: 2px 6px;
-    font-size: 0.7rem;
+    padding: 1px 4px;
+    font-size: var(--fs-xs);
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        color 0.15s,
+        border-color 0.15s;
 }
 
 .buff-toggle-btn:hover {
@@ -564,42 +635,37 @@ input[type="checkbox"] {
 }
 
 .buff-toggle-btn.active {
-    color: #f85149; /* Red color to indicate "Close/Remove" */
+    color: var(--red);
     border-color: rgba(248, 81, 73, 0.5);
     border-style: solid;
 }
 
-/* --- AQWDEX Centered Animated Title --- */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  AQWDEX Title  — slim animated bar                                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
 .aqwdex-title {
-    /* Grid spanning logic */
-    grid-column: 1 / -1; 
+    grid-column: 1 / -1;
     text-align: center;
     justify-self: center;
 
-    /* Spacing and Typography */
-    font-family: var(--font-terminal); /* Fira Code/Consolas stack */
-    font-size: 3rem;
+    font-family: var(--font-terminal);
+    font-size: 1.05rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 16px; /* High spacing for that "Dex" look */
-    margin: 10px 0 30px 0;
-    padding: 15px 0;
-    
+    letter-spacing: 10px;
+    margin: 0 0 0 0;
+    padding: 1px 0 3px 0;
+
     position: relative;
     display: block;
     width: 100%;
-    
-    /* Base Color & Glow using accent variable */
-    color: var(--accent);
-    text-shadow: 0 0 15px var(--accent-glow);
-    
-    /* Moving Spark Gradient */
+
     background: linear-gradient(
-        90deg, 
-        var(--accent) 0%, 
-        var(--accent) 42%, 
-        #fff 50%, 
-        var(--accent) 58%, 
+        90deg,
+        var(--accent) 0%,
+        var(--accent) 42%,
+        #fff 50%,
+        var(--accent) 58%,
         var(--accent) 100%
     );
     background-size: 200% auto;
@@ -608,57 +674,77 @@ input[type="checkbox"] {
     animation: spark-sweep 4s linear infinite;
 }
 
-/* Electricity Bolt "Flying" Effect */
 .aqwdex-title::after {
     content: "";
     position: absolute;
     left: 0;
-    bottom: 5px;
-    width: 60px;
-    height: 2px;
+    bottom: 0;
+    width: 50px;
+    height: 1px;
     background: #fff;
-    box-shadow: 
-        0 0 10px #fff, 
-        0 0 20px var(--accent), 
-        0 0 30px var(--accent);
+    box-shadow:
+        0 0 8px #fff,
+        0 0 16px var(--accent);
     filter: blur(1px);
     opacity: 0;
     animation: electricity-fly 5s ease-in-out infinite;
 }
 
-/* Glitch Shadow */
 .aqwdex-title::before {
     content: "AQWDEX";
     position: absolute;
-    top: 15px;
+    top: 1px;
     left: 0;
     width: 100%;
     height: 100%;
     color: var(--accent);
-    opacity: 0.05;
+    opacity: 0.04;
     z-index: -1;
     animation: glitch-flicker 6s infinite;
+    -webkit-text-fill-color: var(--accent);
 }
 
-/* --- Keyframes --- */
-
-/* Sweeps the white "spark" through the text */
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Keyframes                                                                  */
+/* ─────────────────────────────────────────────────────────────────────────── */
 @keyframes spark-sweep {
-    to { background-position: 200% center; }
+    to {
+        background-position: 200% center;
+    }
 }
 
-/* Flies the bolt across the center */
 @keyframes electricity-fly {
-    0% { transform: translateX(20vw); opacity: 0; }
-    5% { opacity: 1; }
-    25% { transform: translateX(80vw); opacity: 0; }
-    100% { transform: translateX(80vw); opacity: 0; }
+    0% {
+        transform: translateX(20vw);
+        opacity: 0;
+    }
+    5% {
+        opacity: 1;
+    }
+    25% {
+        transform: translateX(80vw);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(80vw);
+        opacity: 0;
+    }
 }
 
-/* Subtle terminal glitch/flicker[cite: 1] */
 @keyframes glitch-flicker {
-    0% { opacity: 0.05; transform: translate(0); }
-    1% { opacity: 0.2; transform: translate(-2px, 1px); }
-    2% { opacity: 0.05; transform: translate(0); }
-    100% { opacity: 0.05; }
+    0% {
+        opacity: 0.04;
+        transform: translate(0);
+    }
+    1% {
+        opacity: 0.18;
+        transform: translate(-2px, 1px);
+    }
+    2% {
+        opacity: 0.04;
+        transform: translate(0);
+    }
+    100% {
+        opacity: 0.04;
+    }
 }
