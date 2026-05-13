@@ -25,7 +25,9 @@ jobs:
 
       - name: Build Project
         # We build with --release for performance and smaller WASM size
-        run: trunk build --release
+        working-directory: ./main
+        run: trunk build --release --public-url /aqwdex/
+        
 
       - name: Push to AQWHub Repository
         uses: cpina/github-action-push-to-another-repository@main
