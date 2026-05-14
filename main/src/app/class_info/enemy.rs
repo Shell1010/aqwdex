@@ -2,6 +2,7 @@ use yew::prelude::*;
 use backend::enemy::EnemySecondaryStats;
 use crate::app::class_info::class::ClassSettings;
 
+
 #[derive(Properties, PartialEq)]
 pub struct EnemyProps {
     pub settings: ClassSettings,

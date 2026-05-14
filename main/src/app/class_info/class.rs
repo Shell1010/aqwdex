@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use crate::app::class_info::build_manager::BuildManager;
 use crate::app::class_info::dps::DpsCalculator;
-use backend::{damage::{Skill, Type, Weapon, WeaponBoost}, enemy::EnemySecondaryStats, gear::{ Enhancement, EnhancementPattern, GearSlot, get_stats, Trait}, player::{Class, ClassModel, Player, PrimaryStats, SecondaryStats}};
+use backend::{damage::{Skill, Type, Weapon, WeaponBoost}, enemy::{EnemySecondaryStats, EnemySkill}, gear::{ Enhancement, EnhancementPattern, GearSlot, get_stats, Trait}, player::{Class, ClassModel, Player, PrimaryStats, SecondaryStats}};
 use gloo_console::log;
 use yew::prelude::*;
 use crate::app::class_info::{enhancement_picker::EnhancementPicker, passive::{CustomPassive, OperationType, TargetType}};
@@ -10,6 +10,7 @@ use crate::app::class_info::skills::Skills;
 use crate::app::class_info::passive::PassiveManager;
 use crate::app::class_info::buffs::BuffManager;
 use crate::app::class_info::enemy::EnemyPanel;
+use crate::app::class_info::enemy_skill::EnemySkills;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
@@ -24,6 +25,7 @@ pub struct ClassSettings {
     pub passives: Vec<CustomPassive>,
     pub skills: Vec<(Skill, Vec<CustomPassive>, bool)>,
     pub enemy: EnemySecondaryStats,
+    pub enemy_skills: Vec<(EnemySkill, Vec<CustomPassive>, bool)>,
 }
 
 #[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
@@ -76,6 +78,7 @@ impl Default for ClassSettings {
             passives: vec![],
             skills: vec![(Skill::default(), vec![], false); 5],
             enemy: EnemySecondaryStats::new(),
+            enemy_skills: vec![(EnemySkill::default(), vec![], false); 1],
         }
     }
 
@@ -449,7 +452,14 @@ pub fn player_settings() -> Html {
             settings_handle.set(current_settings);
         })
     };
-
+    let on_update_enemy_skills = {
+        let settings_handle = settings.clone();
+        Callback::from(move |new_skills: Vec<(EnemySkill, Vec<CustomPassive>, bool)>| {
+            let mut current_settings = (*settings_handle).clone();
+            current_settings.enemy_skills = new_skills;
+            settings_handle.set(current_settings);
+        })
+    };
     let on_add_passive = {
         let settings = settings.clone();
 
@@ -666,6 +676,10 @@ pub fn player_settings() -> Html {
             <div class="panel-right">
                 <Skills settings={(*settings).clone()} on_update_skills={on_update_skills}/>
                 <EnemyPanel settings={(*settings).clone()} on_update_enemy={on_update_enemy} />
+                <EnemySkills 
+                    enemy_skills={settings.enemy_skills.clone()}
+                    on_update_skills={on_update_enemy_skills}
+                />
                 <DpsCalculator settings={(*settings).clone()} />
             </div>
 

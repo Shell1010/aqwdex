@@ -186,3 +186,19 @@ impl EnemySecondaryStats {
     }
 
 }
+
+
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
+pub struct EnemySkill {
+    pub damage: i32,
+    pub cooldown: u32,
+}
+
+impl Default for EnemySkill {
+    fn default() -> Self {
+        Self {
+            damage: 100,
+            cooldown: 2500, // 2 seconds default
+        }
+    }
+}

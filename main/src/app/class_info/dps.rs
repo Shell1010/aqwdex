@@ -22,10 +22,11 @@ struct ActiveBuff {
     passive: CustomPassive
 }
 
-
 #[function_component(DpsCalculator)]
 pub fn dps_calculator(props: &DpsProps) -> Html {
     let settings = &props.settings;
+    
+    // --- UI STATE ---
     let test_duration = use_state(|| 60.0_f32);
     let is_auto_attack = use_state(|| true);
     let rotation = use_state(|| vec![
@@ -35,230 +36,189 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
         RotationAction::Skill(4),
     ]);
 
-    let mut active_buffs: Vec<ActiveBuff> = Vec::new();
-    let mut active_enemy_debuffs: Vec<ActiveBuff> = Vec::new();
+    // =========================================================================
+    // SIMULATION ENGINE
+    // =========================================================================
+    // We isolate the simulation into a block so it calculates fresh on every render.
+    // If you need to add DoTs, Mana, or Health, add them to the setup variables here.
+    let (total_dmg, cast_counts, final_dps) = {
+        // --- 1. Setup ---
+        let duration = *test_duration;
+        let mut time: f32 = 0.0;
+        let mut total_dmg: f32 = 0.0;
+        let mut cast_counts = [0; 5];
+        
+        let mut active_buffs: Vec<ActiveBuff> = Vec::new();
+        let mut active_enemy_debuffs: Vec<ActiveBuff> = Vec::new();
 
-    let get_effective_stats = |actives: &Vec<ActiveBuff>| -> backend::player::SecondaryStats {
-        let mut current_primary = settings.primary_stats.clone();
-        for buff in actives {
-            current_primary = calculate_primary_changes(&mut current_primary, &buff.passive);
-        }
-        let mut current_secondary = settings.class.class_model
-            .secondary_stats_convert(&settings.level, &current_primary);
-        for passive in &settings.passives {
-            current_secondary = calculate_secondary_changes(&mut current_secondary, passive);
-        }
-        for buff in actives {
-            current_secondary = calculate_secondary_changes(&mut current_secondary, &buff.passive);
-        }
-        current_secondary
-    };
+        // Cooldown trackers (Absolute time in seconds when they are ready)
+        let mut gcd_ready_at: f32 = 0.0;
+        let mut cd_ready_at: [f32; 5] = [0.0; 5];
+        let mut rot_wait_until: f32 = 0.0;
+        let mut rotation_idx = 0;
 
-    let get_effective_enemy = |debuffs: &Vec<ActiveBuff>| -> EnemySecondaryStats {
-        let mut current_enemy = settings.enemy.clone();
-        for debuff in debuffs {
-            current_enemy = calculate_enemy_changes(&mut current_enemy, &debuff.passive);
-        }
-        current_enemy
-    };
+        // --- 2. Helper Functions ---
+        // Calculates the player's stats with all current active buffs applied
+        let get_effective_stats = |actives: &Vec<ActiveBuff>| -> backend::player::SecondaryStats {
+            let mut current_primary = settings.primary_stats.clone();
+            for buff in actives { current_primary = calculate_primary_changes(&mut current_primary, &buff.passive); }
+            
+            let mut current_secondary = settings.class.class_model.secondary_stats_convert(&settings.level, &current_primary);
+            for passive in &settings.passives { current_secondary = calculate_secondary_changes(&mut current_secondary, passive); }
+            for buff in actives { current_secondary = calculate_secondary_changes(&mut current_secondary, &buff.passive); }
+            
+            current_secondary
+        };
 
-    let duration = *test_duration;
-    let mut time: f32 = 0.0;
+        // Calculates the enemy's stats with all current active debuffs applied
+        let get_effective_enemy = |debuffs: &Vec<ActiveBuff>| -> EnemySecondaryStats {
+            let mut current_enemy = settings.enemy.clone();
+            for debuff in debuffs { current_enemy = calculate_enemy_changes(&mut current_enemy, &debuff.passive); }
+            current_enemy
+        };
 
-    let mut gcd_ready_at: f32 = 0.0;
-    let mut cd_ready_at: [f32; 5] = [0.0; 5];
-    let mut rot_wait_until: f32 = 0.0;
+        // Calculates raw average damage for a specific skill (Crit + Non-Crit weighted)
+        let compute_avg_dmg = |s_idx: usize, secondary: &backend::player::SecondaryStats, enemy: &EnemySecondaryStats| -> f32 {
+            let (skill, _, _) = &settings.skills[s_idx];
+            if skill.target == Target::Yourself { return 0.0; }
 
-    let mut rotation_idx = 0;
-    let mut total_dmg: f32 = 0.0;
-    let mut cast_counts = [0; 5];
+            let crit = (secondary.crit_chance / 100.0).clamp(0.0, 1.0);
+            let e_mod = enemy_incoming_modifier(&skill.damage_type, enemy);
+            let dmg_non_crit = skill.compute(&settings.weapon, secondary, false) * e_mod;
+            dmg_non_crit * (1.0 + crit * (secondary.crit_mod / 100.0))
+            
+        };
 
-    let haste = (settings.secondary_stats.haste / 100.0).clamp(0.0, 0.50);
-
-    let compute_avg_dmg = |s_idx: usize, secondary: &backend::player::SecondaryStats, enemy: &EnemySecondaryStats| -> f32 {
-        let (skill, _, _) = &settings.skills[s_idx];
-        if skill.target == Target::Yourself {
-            return 0.0
-        }
-        let crit = (secondary.crit_chance / 100.0).clamp(0.0, 1.0);
-        let e_mod = enemy_incoming_modifier(&skill.damage_type, enemy);
-        let dmg_non_crit = skill.compute(&settings.weapon, secondary, false) * e_mod;
-        let dmg_crit = skill.compute(&settings.weapon, secondary, true) * e_mod;
-        (dmg_non_crit * (1.0 - crit)) + (dmg_crit * crit)
-    };
-
-    let mut safety_net = 0;
-    while time < duration && safety_net < 100_000 {
-        safety_net += 1;
-
-        let mut next_aa_time = f32::INFINITY;
-        if *is_auto_attack {
-            next_aa_time = cd_ready_at[0].max(time);
-        }
-
-        let mut next_rot_time = f32::INFINITY;
-        if !rotation.is_empty() {
-            if rot_wait_until > time {
-                next_rot_time = rot_wait_until;
-            } else {
-                match &rotation[rotation_idx] {
-                    RotationAction::Skill(idx) => {
-                        if *idx == 0 {
-                            if *is_auto_attack {
-                                next_rot_time = time;
-                            } else {
-                                next_rot_time = cd_ready_at[0].max(time);
-                            }
-                        } else {
-                            next_rot_time = cd_ready_at[*idx].max(gcd_ready_at).max(time);
-                        }
-                    }
-                    RotationAction::Delay(_) => {
-                        next_rot_time = time;
-                    }
-                }
-            }
-        }
-
-        if next_aa_time == f32::INFINITY && next_rot_time == f32::INFINITY {
-            break;
-        }
-
-        let t_event = next_aa_time.min(next_rot_time);
-        if t_event >= duration {
-            break;
-        }
-        let delta_ms = (t_event - time) * 1000.0;
-        time = t_event;
-
-        active_buffs.retain_mut(|b| {
-            if let Some(_) = b.passive.duration {
-                b.remaining_ms -= delta_ms;
-                b.remaining_ms > 0.0
-            } else {
-                true
-            }
-        });
-        active_enemy_debuffs.retain_mut(|b| {
-            if let Some(_) = b.passive.duration {
-                b.remaining_ms -= delta_ms;
-                b.remaining_ms > 0.0
-            } else {
-                true
-            }
-        });
-
-        let current_secondary = get_effective_stats(&active_buffs);
-        let current_enemy = get_effective_enemy(&active_enemy_debuffs);
-
-
-        let mut action_taken = false;
-
-        if *is_auto_attack && time == next_aa_time {
-            total_dmg += compute_avg_dmg(0, &current_secondary, &current_enemy);
-            cast_counts[0] += 1;
-            let curr_h = (current_secondary.haste / 100.0).clamp(0.0, 0.50);
-            let (aa_skill, aa_passives, _) = &settings.skills[0];
-            for (p_idx, passive) in aa_passives.iter().enumerate() {
-                if passive.target_type == TargetType::Enemy {
-                    if let Some(existing) = active_enemy_debuffs.iter_mut().find(|b| b.skill_idx == 0 && b.passive_idx == p_idx) {
-                        if let Some(d) = passive.duration { existing.remaining_ms = d as f32; }
-                    } else {
-                        active_enemy_debuffs.push(ActiveBuff {
-                            skill_idx: 0, passive_idx: p_idx,
-                            remaining_ms: passive.duration.unwrap_or(0) as f32,
-                            passive: passive.clone(),
-                        });
-                    }
+        // Helper to apply buffs/debuffs when a skill is cast
+        let apply_passives = |s_idx: usize, passives: &Vec<CustomPassive>, e_debuffs: &mut Vec<ActiveBuff>, p_buffs: &mut Vec<ActiveBuff>| {
+            for (p_idx, passive) in passives.iter().enumerate() {
+                let mut target_list = if passive.target_type == TargetType::Enemy { e_debuffs.clone() } else { p_buffs.clone() };
+                
+                // Refresh duration if it already exists, otherwise add new
+                if let Some(existing) = target_list.iter_mut().find(|b| b.skill_idx == s_idx && b.passive_idx == p_idx) {
+                    if let Some(d) = passive.duration { existing.remaining_ms = d as f32; }
                 } else {
-                    if let Some(existing) = active_buffs.iter_mut().find(|b| b.skill_idx == 0 && b.passive_idx == p_idx) {
-                        if let Some(d) = passive.duration {
-                            existing.remaining_ms = d as f32;
+                    target_list.push(ActiveBuff {
+                        skill_idx: s_idx, passive_idx: p_idx,
+                        remaining_ms: passive.duration.unwrap_or(0) as f32,
+                        passive: passive.clone(),
+                    });
+                }
+            }
+        };
+
+        // --- 3. Main Event Loop ---
+        let mut safety_net = 0;
+        while time < duration && safety_net < 100_000 {
+            safety_net += 1;
+
+            // Phase A: Predict the next event time
+            let next_aa_time = if *is_auto_attack { cd_ready_at[0].max(time) } else { f32::INFINITY };
+            let mut next_rot_time = f32::INFINITY;
+            
+            if !rotation.is_empty() {
+                if rot_wait_until > time {
+                    next_rot_time = rot_wait_until;
+                } else {
+                    match &rotation[rotation_idx] {
+                        RotationAction::Skill(idx) => {
+                            if *idx == 0 {
+                                next_rot_time = if *is_auto_attack { time } else { cd_ready_at[0].max(time) };
+                            } else {
+                                // Skill must wait for both its own CD and the Global CD
+                                next_rot_time = cd_ready_at[*idx].max(gcd_ready_at).max(time);
+                            }
                         }
-                    } else {
-                        active_buffs.push(ActiveBuff {
-                            skill_idx: 0,
-                            passive_idx: p_idx,
-                            remaining_ms: passive.duration.unwrap_or(0) as f32,
-                            passive: passive.clone(),
-                        });
+                        RotationAction::Delay(_) => next_rot_time = time,
                     }
                 }
             }
-            cd_ready_at[0] = time + ((aa_skill.cd as f32 / 1000.0) * (1.0 - curr_h)).max(0.001);
-            action_taken = true;
-        }
 
-        if !rotation.is_empty() && time == next_rot_time {
-            if rot_wait_until <= time {
-                match &rotation[rotation_idx] {
-                    RotationAction::Skill(s) => {
-                        let s_idx = *s;
+            // If no events left, end simulation
+            let t_event = next_aa_time.min(next_rot_time);
+            if t_event >= duration || t_event == f32::INFINITY { break; }
 
-                        if s_idx == 0 && *is_auto_attack {
-                        } else if time >= cd_ready_at[s_idx] && (s_idx == 0 || time >= gcd_ready_at) {
-                            total_dmg += compute_avg_dmg(s_idx, &current_secondary, &current_enemy);
-                            cast_counts[s_idx] += 1;
+            // Phase B: Advance time and Decay Auras
+            let delta_ms = (t_event - time) * 1000.0;
+            time = t_event;
 
-                            let (_, skill_passives, _) = &settings.skills[s_idx];
-                            for (p_idx, passive) in skill_passives.iter().enumerate() {
-                                if passive.target_type == TargetType::Enemy {
-                                    if let Some(existing) = active_enemy_debuffs.iter_mut().find(|b| b.skill_idx == s_idx && b.passive_idx == p_idx) {
-                                        if let Some(d) = passive.duration { existing.remaining_ms = d as f32; }
-                                    } else {
-                                        active_enemy_debuffs.push(ActiveBuff {
-                                            skill_idx: s_idx, passive_idx: p_idx,
-                                            remaining_ms: passive.duration.unwrap_or(0) as f32,
-                                            passive: passive.clone(),
-                                        });
-                                    }
-                                } else {
-                                    if let Some(existing) = active_buffs.iter_mut().find(|b| b.skill_idx == s_idx && b.passive_idx == p_idx) {
-                                        if let Some(d) = passive.duration {
-                                            existing.remaining_ms = d as f32;
-                                        }
-                                    } else {
-                                        active_buffs.push(ActiveBuff {
-                                            skill_idx: s_idx,
-                                            passive_idx: p_idx,
-                                            remaining_ms: passive.duration.unwrap_or(0) as f32,
-                                            passive: passive.clone(),
-                                        });
-                                    }
+            let decay_buffs = |b: &mut ActiveBuff| {
+                if b.passive.duration.is_some() {
+                    b.remaining_ms -= delta_ms;
+                    b.remaining_ms > 0.0 // Keep if time remaining > 0
+                } else { true } // Keep indefinite buffs forever
+            };
+            active_buffs.retain_mut(decay_buffs);
+            active_enemy_debuffs.retain_mut(decay_buffs);
+
+            // Recalculate stats for this exact moment in time
+            let current_secondary = get_effective_stats(&active_buffs);
+            let current_enemy = get_effective_enemy(&active_enemy_debuffs);
+            let curr_h = (current_secondary.haste / 100.0).clamp(0.0, 0.50); // AQW Hard Haste Cap at 50%
+
+            let mut action_taken = false;
+
+            // Phase C: Execute Auto Attack
+            if *is_auto_attack && time == next_aa_time {
+                total_dmg += compute_avg_dmg(0, &current_secondary, &current_enemy);
+                cast_counts[0] += 1;
+                
+                let (aa_skill, aa_passives, _) = &settings.skills[0];
+                apply_passives(0, aa_passives, &mut active_enemy_debuffs, &mut active_buffs);
+                
+                cd_ready_at[0] = time + ((aa_skill.cd as f32 / 1000.0) * (1.0 - curr_h)).max(0.001);
+                action_taken = true;
+            }
+
+            // Phase D: Execute Rotation Action
+            if !rotation.is_empty() && time == next_rot_time {
+                if rot_wait_until <= time {
+                    match &rotation[rotation_idx] {
+                        RotationAction::Skill(s_idx) => {
+                            let s_idx = *s_idx;
+                            
+                            // Check if it's a valid cast (Not AA if AA is auto, and off CDs)
+                            if !(s_idx == 0 && *is_auto_attack) && time >= cd_ready_at[s_idx] && (s_idx == 0 || time >= gcd_ready_at) {
+                                total_dmg += compute_avg_dmg(s_idx, &current_secondary, &current_enemy);
+                                cast_counts[s_idx] += 1;
+
+                                let (skill_data, skill_passives, _) = &settings.skills[s_idx];
+                                apply_passives(s_idx, skill_passives, &mut active_enemy_debuffs, &mut active_buffs);
+                                
+                                cd_ready_at[s_idx] = time + ((skill_data.cd as f32 / 1000.0) * (1.0 - curr_h)).max(0.001);
+                                if s_idx != 0 {
+                                    gcd_ready_at = time + 1.5 * (1.0 - curr_h); // AQW Base GCD is 1.5s
                                 }
                             }
-                            let curr_h = (current_secondary.haste / 100.0).clamp(0.0, 0.50);
-                            let (skill_data, _, _) = &settings.skills[s_idx];
-                            cd_ready_at[s_idx] = time + ((skill_data.cd as f32 / 1000.0) * (1.0 - curr_h)).max(0.001);
-                            if s_idx != 0 {
-                                gcd_ready_at = time + 1.5 * (1.0 - curr_h);
-                            }
-                        } else {
-
+                            rotation_idx = (rotation_idx + 1) % rotation.len();
                         }
-                        rotation_idx = (rotation_idx + 1) % rotation.len();
-                    }
-                    RotationAction::Delay(d) => {
-                        rot_wait_until = time + d;
-                        rotation_idx = (rotation_idx + 1) % rotation.len();
+                        RotationAction::Delay(d) => {
+                            rot_wait_until = time + d;
+                            rotation_idx = (rotation_idx + 1) % rotation.len();
+                        }
                     }
                 }
+                action_taken = true;
             }
-            action_taken = true;
+
+            // Prevent infinite loops if events clump
+            if !action_taken { time += 0.001; }
         }
 
-        if !action_taken {
-            time += 0.001;
-        }
-    }
+        let final_dps = if duration > 0.0 { total_dmg / duration } else { 0.0 };
+        (total_dmg, cast_counts, final_dps)
+    };
 
-    let final_dps = if duration > 0.0 { total_dmg / duration } else { 0.0 };
 
+    // =========================================================================
+    // UI RENDER LOOP
+    // =========================================================================
     html! {
         <div class="dps-calculator panel-right-section" style="margin-top: 20px;">
             <h3>{"DPS Simulator"}</h3>
 
             <div class="stats-screen">
+                // --- Settings Panel ---
                 <div class="stat-block">
                     <h4>{"Simulation Settings"}</h4>
                     <div class="input-field">
@@ -269,7 +229,6 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
                                 let test_duration = test_duration.clone();
                                 Callback::from(move |e: InputEvent| {
                                     let val: f32 = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().unwrap_or(60.0);
-
                                     test_duration.set(val.max(1.0));
                                 })
                             }
@@ -280,14 +239,13 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
                         <input type="checkbox" checked={*is_auto_attack}
                             onclick={
                                 let is_auto_attack = is_auto_attack.clone();
-                                Callback::from(move |_| {
-                                    is_auto_attack.set(!*is_auto_attack);
-                                })
+                                Callback::from(move |_| is_auto_attack.set(!*is_auto_attack))
                             }
                         />
                     </div>
                 </div>
 
+                // --- Results Panel ---
                 <div class="stat-block" style="border-color: var(--accent);">
                     <h4>{"Simulation Results"}</h4>
                     <div class="stat-row">
@@ -308,10 +266,8 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
                         <span class="label">{"Skill Buffs"}</span>
                         <span class="value" style="font-size: 0.75rem; color: var(--text-muted);">
                             {format!("1:[{}] 2:[{}] 3:[{}] 4:[{}] 5:[{}]",
-                                settings.skills[0].1.len(),
-                                settings.skills[1].1.len(),
-                                settings.skills[2].1.len(),
-                                settings.skills[3].1.len(),
+                                settings.skills[0].1.len(), settings.skills[1].1.len(),
+                                settings.skills[2].1.len(), settings.skills[3].1.len(),
                                 settings.skills[4].1.len(),
                             )}
                         </span>
@@ -319,6 +275,7 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
                 </div>
             </div>
 
+            // --- Rotation Builder ---
             <h4>{"Skill Rotation Planner"}</h4>
             <table>
                 <thead>
