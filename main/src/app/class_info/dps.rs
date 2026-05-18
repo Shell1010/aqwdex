@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use crate::app::class_info::class::{ClassSettings, calculate_secondary_changes, calculate_primary_changes, calculate_enemy_changes, enemy_incoming_modifier};
 use crate::app::class_info::passive::{CustomPassive, TargetType};
-use backend::{damage::Target, enemy::EnemySecondaryStats};
+use backend::{damage::Target, enemy::EnemySecondaryStats, enemy::EnemySkill};
 
 #[derive(Clone, PartialEq)]
 pub enum RotationAction {
@@ -28,6 +28,7 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
     
     // --- UI STATE ---
     let test_duration = use_state(|| 60.0_f32);
+    let enemy_hp = use_state(|| settings.enemy.hp);
     let is_auto_attack = use_state(|| true);
     let rotation = use_state(|| vec![
         RotationAction::Skill(1),
@@ -41,7 +42,7 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
     // =========================================================================
     // We isolate the simulation into a block so it calculates fresh on every render.
     // If you need to add DoTs, Mana, or Health, add them to the setup variables here.
-    let (total_dmg, cast_counts, final_dps) = {
+    let (total_dmg, cast_counts, final_dps, running_player_hp, player_died, running_enemy_hp, enemy_defeated) = {
         // --- 1. Setup ---
         let duration = *test_duration;
         let mut time: f32 = 0.0;
@@ -54,6 +55,8 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
         // Cooldown trackers (Absolute time in seconds when they are ready)
         let mut gcd_ready_at: f32 = 0.0;
         let mut cd_ready_at: [f32; 5] = [0.0; 5];
+        let mut enemy_cd_ready_at = vec![0.0; settings.enemy_skills.len()];
+        
         let mut rot_wait_until: f32 = 0.0;
         let mut rotation_idx = 0;
 
@@ -69,7 +72,15 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
             
             current_secondary
         };
-
+        
+        let initial_stats = get_effective_stats(&active_buffs);
+        let mut running_player_hp = initial_stats.hp; 
+        let mut player_died = false;
+        
+        let has_finite_hp = *enemy_hp > 0;
+        let mut running_enemy_hp = *enemy_hp;
+        let mut enemy_defeated = false;
+        
         // Calculates the enemy's stats with all current active debuffs applied
         let get_effective_enemy = |debuffs: &Vec<ActiveBuff>| -> EnemySecondaryStats {
             let mut current_enemy = settings.enemy.clone();
@@ -78,15 +89,19 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
         };
 
         // Calculates raw average damage for a specific skill (Crit + Non-Crit weighted)
-        let compute_avg_dmg = |s_idx: usize, secondary: &backend::player::SecondaryStats, enemy: &EnemySecondaryStats| -> f32 {
+        let compute_avg_dmg = |s_idx: usize, secondary: &backend::player::SecondaryStats, enemy: &EnemySecondaryStats| -> (f32, f32) {
             let (skill, _, _) = &settings.skills[s_idx];
-            if skill.target == Target::Yourself { return 0.0; }
-
             let crit = (secondary.crit_chance / 100.0).clamp(0.0, 1.0);
-            let e_mod = enemy_incoming_modifier(&skill.damage_type, enemy);
-            let dmg_non_crit = skill.compute(&settings.weapon, secondary, false) * e_mod;
-            dmg_non_crit * (1.0 + crit * (secondary.crit_mod / 100.0))
             
+            let dmg_non_crit = skill.compute(&settings.weapon, secondary, false);
+            let avg_raw = dmg_non_crit * (1.0 + crit * (secondary.crit_mod / 100.0));
+    
+            if skill.target == Target::Yourself {
+                (0.0, avg_raw) // Negative value translates to healing mathematically
+            } else {
+                let e_mod = enemy_incoming_modifier(&skill.damage_type, enemy);
+                (avg_raw * e_mod, 0.0)
+            }
         };
 
         // Helper to apply buffs/debuffs when a skill is cast
@@ -114,7 +129,10 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
 
             // Phase A: Predict the next event time
             let next_aa_time = if *is_auto_attack { cd_ready_at[0].max(time) } else { f32::INFINITY };
+            let next_enemy_time = enemy_cd_ready_at.iter().copied().fold(f32::INFINITY, f32::min);
             let mut next_rot_time = f32::INFINITY;
+
+            
             
             if !rotation.is_empty() {
                 if rot_wait_until > time {
@@ -135,78 +153,110 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
             }
 
             // If no events left, end simulation
-            let t_event = next_aa_time.min(next_rot_time);
+            let t_event = next_aa_time.min(next_rot_time).min(next_enemy_time);
             if t_event >= duration || t_event == f32::INFINITY { break; }
 
             // Phase B: Advance time and Decay Auras
             let delta_ms = (t_event - time) * 1000.0;
             time = t_event;
 
-            let decay_buffs = |b: &mut ActiveBuff| {
-                if b.passive.duration.is_some() {
-                    b.remaining_ms -= delta_ms;
-                    b.remaining_ms > 0.0 // Keep if time remaining > 0
-                } else { true } // Keep indefinite buffs forever
-            };
-            active_buffs.retain_mut(decay_buffs);
-            active_enemy_debuffs.retain_mut(decay_buffs);
+            active_buffs.retain_mut(|b| { b.remaining_ms -= delta_ms; b.passive.duration.is_none() || b.remaining_ms > 0.0 });
+            active_enemy_debuffs.retain_mut(|b| { b.remaining_ms -= delta_ms; b.passive.duration.is_none() || b.remaining_ms > 0.0 });
 
             // Recalculate stats for this exact moment in time
-            let current_secondary = get_effective_stats(&active_buffs);
+            let mut current_secondary = get_effective_stats(&active_buffs);
             let current_enemy = get_effective_enemy(&active_enemy_debuffs);
             let curr_h = (current_secondary.haste / 100.0).clamp(0.0, 0.50); // AQW Hard Haste Cap at 50%
 
+            current_secondary.current_hp = running_player_hp;
+            
             let mut action_taken = false;
 
-            // Phase C: Execute Auto Attack
-            if *is_auto_attack && time == next_aa_time {
-                total_dmg += compute_avg_dmg(0, &current_secondary, &current_enemy);
-                cast_counts[0] += 1;
-                
-                let (aa_skill, aa_passives, _) = &settings.skills[0];
-                apply_passives(0, aa_passives, &mut active_enemy_debuffs, &mut active_buffs);
-                
-                cd_ready_at[0] = time + ((aa_skill.cd as f32 / 1000.0) * (1.0 - curr_h)).max(0.001);
-                action_taken = true;
+            // Phase C: Enemy Actions (They hit first if tied)
+            for (e_idx, (e_skill, e_passives, e_crit)) in settings.enemy_skills.iter().enumerate() {
+                if time == enemy_cd_ready_at[e_idx] {
+                    let mut inc_dmg = e_skill.damage as f32;
+                    if *e_crit { inc_dmg *= 1.0 + (current_enemy.crit_mod / 100.0); }
+                    
+                    current_secondary.current_hp -= inc_dmg as i32;
+                    apply_passives(100 + e_idx, e_passives, &mut active_enemy_debuffs, &mut active_buffs);
+                    
+                    enemy_cd_ready_at[e_idx] = time + (e_skill.cooldown as f32 / 1000.0).max(0.001);
+                    action_taken = true;
+                }
+            }
+
+            if current_secondary.current_hp <= 0 {
+                player_died = true;
+                running_player_hp = 0;
+                break; 
             }
 
             // Phase D: Execute Rotation Action
+            // 
+            if *is_auto_attack && time == next_aa_time {
+                let (e_dmg, p_dmg) = compute_avg_dmg(0, &current_secondary, &current_enemy);
+                total_dmg += e_dmg;
+                
+                // Apply damage to enemy and check death condition
+                running_enemy_hp -= e_dmg as i32;
+                if has_finite_hp && running_enemy_hp <= 0 {
+                    enemy_defeated = true;
+                    running_enemy_hp = 0;
+                    break;
+                }
+    
+                current_secondary.current_hp -= p_dmg as i32; 
+                current_secondary.current_hp = current_secondary.current_hp.min(current_secondary.hp);
+    
+                cast_counts[0] += 1;
+                apply_passives(0, &settings.skills[0].1, &mut active_enemy_debuffs, &mut active_buffs);
+                cd_ready_at[0] = time + ((settings.skills[0].0.cd as f32 / 1000.0) * (1.0 - curr_h)).max(0.001);
+                action_taken = true;
+            }
             if !rotation.is_empty() && time == next_rot_time {
                 if rot_wait_until <= time {
-                    match &rotation[rotation_idx] {
-                        RotationAction::Skill(s_idx) => {
-                            let s_idx = *s_idx;
-                            
-                            // Check if it's a valid cast (Not AA if AA is auto, and off CDs)
-                            if !(s_idx == 0 && *is_auto_attack) && time >= cd_ready_at[s_idx] && (s_idx == 0 || time >= gcd_ready_at) {
-                                total_dmg += compute_avg_dmg(s_idx, &current_secondary, &current_enemy);
-                                cast_counts[s_idx] += 1;
+                    if let RotationAction::Skill(s_idx) = rotation[rotation_idx] {
+                        if !(s_idx == 0 && *is_auto_attack) && time >= cd_ready_at[s_idx] && (s_idx == 0 || time >= gcd_ready_at) {
+                            let (e_dmg, p_dmg) = compute_avg_dmg(s_idx, &current_secondary, &current_enemy);
+                            total_dmg += e_dmg;
 
-                                let (skill_data, skill_passives, _) = &settings.skills[s_idx];
-                                apply_passives(s_idx, skill_passives, &mut active_enemy_debuffs, &mut active_buffs);
-                                
-                                cd_ready_at[s_idx] = time + ((skill_data.cd as f32 / 1000.0) * (1.0 - curr_h)).max(0.001);
-                                if s_idx != 0 {
-                                    gcd_ready_at = time + 1.5 * (1.0 - curr_h); // AQW Base GCD is 1.5s
-                                }
+                            running_enemy_hp -= e_dmg as i32;
+                            if has_finite_hp && running_enemy_hp <= 0 {
+                                enemy_defeated = true;
+                                running_enemy_hp = 0;
+                                break;
                             }
-                            rotation_idx = (rotation_idx + 1) % rotation.len();
+                                                    
+                            current_secondary.current_hp -= p_dmg as i32;
+                            current_secondary.current_hp = current_secondary.current_hp.min(current_secondary.hp);
+    
+                            cast_counts[s_idx] += 1;
+                            apply_passives(s_idx, &settings.skills[s_idx].1, &mut active_enemy_debuffs, &mut active_buffs);
+                            
+                            cd_ready_at[s_idx] = time + ((settings.skills[s_idx].0.cd as f32 / 1000.0) * (1.0 - curr_h)).max(0.001);
+                            if s_idx != 0 { gcd_ready_at = time + 1.5 * (1.0 - curr_h); }
                         }
-                        RotationAction::Delay(d) => {
-                            rot_wait_until = time + d;
-                            rotation_idx = (rotation_idx + 1) % rotation.len();
-                        }
+                        rotation_idx = (rotation_idx + 1) % rotation.len();
+                    } else if let RotationAction::Delay(d) = rotation[rotation_idx] {
+                        rot_wait_until = time + d;
+                        rotation_idx = (rotation_idx + 1) % rotation.len();
                     }
                 }
                 action_taken = true;
             }
 
-            // Prevent infinite loops if events clump
+            running_player_hp = current_secondary.current_hp;
+            
+            if running_player_hp <= 0 {
+                player_died = true;
+                break;
+            }
             if !action_taken { time += 0.001; }
         }
 
-        let final_dps = if duration > 0.0 { total_dmg / duration } else { 0.0 };
-        (total_dmg, cast_counts, final_dps)
+        let final_dps = if duration > 0.0 { total_dmg / time.min(duration) } else { 0.0 };
+        (total_dmg, cast_counts, final_dps, running_player_hp, player_died, running_enemy_hp, enemy_defeated)
     };
 
 
@@ -234,6 +284,21 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
                             }
                         />
                     </div>
+                    <div class="input-field">
+                        <label>{"Enemy HP: "}</label>
+                        <input type="number" step="1.0" min="1.0" class="table-input" style="border: 1px solid var(--border-color);"
+                            value={enemy_hp.to_string()}
+                            oninput={
+                                let enemy_hp = enemy_hp.clone();
+                                Callback::from(move |e: InputEvent| {
+                                    let val: i32 = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().unwrap_or(0);
+                                    enemy_hp.set(val);
+                                })
+                            }
+                        />
+                    </div>
+                    
+
                     <div class="input-field" style="margin-top: 10px;">
                         <label>{"Auto Attack Parallel: "}</label>
                         <input type="checkbox" checked={*is_auto_attack}
@@ -246,8 +311,44 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
                 </div>
 
                 // --- Results Panel ---
-                <div class="stat-block" style="border-color: var(--accent);">
+                // --- Simulation Results Output Window ---
+                <div class="stat-block" style={if player_died { "border-color: #f85149;" } else if enemy_defeated { "border-color: #7ee787;" } else { "border-color: var(--accent);" }}>
                     <h4>{"Simulation Results"}</h4>
+                    
+                    { if player_died {
+                        html! {
+                            <div class="stat-row" style="margin-bottom: 10px; padding: 5px; background: rgba(248, 81, 73, 0.1); border-radius: 4px; text-align: center;">
+                                <span class="value" style="color: #f85149; font-weight: bold; width: 100%;">{"❌ FAILED: PLAYER DIED"}</span>
+                            </div>
+                        }
+                    } else if enemy_defeated {
+                        html! {
+                            <div class="stat-row" style="margin-bottom: 10px; padding: 5px; background: rgba(126, 231, 135, 0.1); border-radius: 4px; text-align: center;">
+                                <span class="value" style="color: #7ee787; font-weight: bold; width: 100%;">{"🏆 SUCCESS: ENEMY DEFEATED"}</span>
+                            </div>
+                        }
+                    } else {
+                        html! {
+                            <div class="stat-row" style="margin-bottom: 10px; padding: 5px; background: rgba(126, 231, 135, 0.1); border-radius: 4px; text-align: center;">
+                                <span class="value" style="color: #7ee787; font-weight: bold; width: 100%;">{"✅ SURVIVED"}</span>
+                            </div>
+                        }
+                    }}
+                
+                    <div class="stat-row">
+                        <span class="label">{"Player HP"}</span>
+                        <span class="value" style={if player_died { "color: #f85149;" } else { "" }}>
+                            {format!("{:.0} / {:.0}", running_player_hp, settings.class.class_model.secondary_stats_convert(&settings.level, &settings.primary_stats).hp)}
+                        </span>
+                    </div>
+                
+                    <div class="stat-row">
+                        <span class="label">{"Enemy HP"}</span>
+                        <span class="value">
+                            { if *enemy_hp <= 0 { "∞".to_string() } else { format!("{:.0} / {}", running_enemy_hp, *enemy_hp) } }
+                        </span>
+                    </div>
+                
                     <div class="stat-row">
                         <span class="label">{"Total Damage"}</span>
                         <span class="value">{format!("{:.0}", total_dmg)}</span>
@@ -256,26 +357,11 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
                         <span class="label">{"Average DPS"}</span>
                         <span class="value" style="color: #ff7b72;">{format!("{:.1}", final_dps)}</span>
                     </div>
-                    <div class="stat-row" style="margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
-                        <span class="label">{"Skill Casts"}</span>
-                        <span class="value" style="font-size: 0.75rem; color: var(--text-muted);">
-                            {format!("1:[{}] 2:[{}] 3:[{}] 4:[{}] 5:[{}]", cast_counts[0], cast_counts[1], cast_counts[2], cast_counts[3], cast_counts[4])}
-                        </span>
-                    </div>
-                    <div class="stat-row" style="margin-top: 6px; border-top: 1px dashed var(--border-color); padding-top: 6px;">
-                        <span class="label">{"Skill Buffs"}</span>
-                        <span class="value" style="font-size: 0.75rem; color: var(--text-muted);">
-                            {format!("1:[{}] 2:[{}] 3:[{}] 4:[{}] 5:[{}]",
-                                settings.skills[0].1.len(), settings.skills[1].1.len(),
-                                settings.skills[2].1.len(), settings.skills[3].1.len(),
-                                settings.skills[4].1.len(),
-                            )}
-                        </span>
-                    </div>
                 </div>
             </div>
 
             // --- Rotation Builder ---
+            // (Same as before, skipped repeating for brevity, keep your table intact!)
             <h4>{"Skill Rotation Planner"}</h4>
             <table>
                 <thead>

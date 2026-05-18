@@ -509,7 +509,7 @@ impl ClassModel {
             hit_chance: self.hit_chance_convert(player, primary),
             attack_power: self.attack_power_convert(player, primary),
             spell_power: self.spell_power_convert(player, primary),
-            hp: player.base_hp() + (primary.endurance as i32 * 5) as i32,
+            hp: hp,
             current_hp: hp,
             mp: 100,
             current_mp: 100,

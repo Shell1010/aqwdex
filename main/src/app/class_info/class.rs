@@ -355,6 +355,8 @@ pub fn enemy_incoming_modifier(damage_type: &Type, enemy: &EnemySecondaryStats) 
 }
 
 
+
+
 impl ClassSettings {
     pub fn refresh_stats(&mut self) {
         let mut primary_stats = self.class.class_model.level_primary_stat_total(&self.level);
