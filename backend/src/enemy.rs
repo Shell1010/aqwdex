@@ -27,6 +27,11 @@ pub struct EnemySecondaryStats {
     pub current_mp: i32,
 }
 
+impl Default for EnemySecondaryStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl EnemySecondaryStats {
     pub fn new() -> Self {
         EnemySecondaryStats {

@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use crate::app::class_info::class::{ClassSettings, calculate_secondary_changes, calculate_primary_changes, calculate_enemy_changes, enemy_incoming_modifier};
 use crate::app::class_info::passive::{CustomPassive, TargetType};
-use backend::{damage::Target, enemy::EnemySecondaryStats, enemy::EnemySkill};
+use backend::{damage::Target, enemy::EnemySecondaryStats};
 
 #[derive(Clone, PartialEq)]
 pub enum RotationAction {
@@ -356,6 +356,12 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
                     <div class="stat-row">
                         <span class="label">{"Average DPS"}</span>
                         <span class="value" style="color: #ff7b72;">{format!("{:.1}", final_dps)}</span>
+                    </div>
+                    <div class="stat-row" style="margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                        <span class="label">{"Skill Casts"}</span>
+                        <span class="value" style="font-size: 0.75rem; color: var(--text-muted);">
+                            {format!("1:[{}] 2:[{}] 3:[{}] 4:[{}] 5:[{}]", cast_counts[0], cast_counts[1], cast_counts[2], cast_counts[3], cast_counts[4])}
+                        </span>
                     </div>
                 </div>
             </div>

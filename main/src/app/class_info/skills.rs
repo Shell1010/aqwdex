@@ -66,7 +66,7 @@ pub fn skills(props: &SkillProps) -> Html {
                     </thead>
                     <tbody>
                         { for skills_list.iter().enumerate().map(|(i, (skill, passives, is_crit))| {
-                            let skill = skill.clone();
+                            let skill = *skill;
                             let passives = passives.clone();
                             let is_crit = *is_crit;
                             let up_cb = update_skill_at.clone();
@@ -81,29 +81,29 @@ pub fn skills(props: &SkillProps) -> Html {
                                         <td>
                                             <input type="number" class="table-input" value={skill.damage.to_string()}
                                                 oninput={
-                                                    let s = skill.clone();
+                                                    let s = skill;
                                                     let p = passives.clone();
                                                     let up = up_cb.clone();
                                                     Callback::from(move |e: InputEvent| {
-                                                        let mut s = s.clone();
+                                                        let mut s = s;
                                                         let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().unwrap_or(0.0);
                                                         s.damage = val;
-                                                        up.emit((i, s.clone(), p.clone(), is_crit));
+                                                        up.emit((i, s, p.clone(), is_crit));
                                                     })
                                                 }
                                             />
                                         </td>
                                         <td>
                                             <select onchange={
-                                                let s = skill.clone();
+                                                let s = skill;
                                                 let p = passives.clone();
                                                 let up = up_cb.clone();
                                                 Callback::from(move |e: Event| {
-                                                    let mut s = s.clone();
+                                                    let mut s = s;
                                                     let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
                                                     if let Ok(src) = DamageSource::from_str(&val) {
                                                         s.dsrc = src;
-                                                        up.emit((i, s.clone(), p.clone(), is_crit));
+                                                        up.emit((i, s, p.clone(), is_crit));
                                                     }
                                                 })
                                             }>
@@ -120,15 +120,15 @@ pub fn skills(props: &SkillProps) -> Html {
                                         </td>
                                         <td>
                                             <select onchange={
-                                                let s = skill.clone();
+                                                let s = skill;
                                                 let p = passives.clone();
                                                 let up = up_cb.clone();
                                                 Callback::from(move |e: Event| {
-                                                    let mut s = s.clone();
+                                                    let mut s = s;
                                                     let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
                                                     if let Ok(t) = Type::from_str(&val) {
                                                         s.damage_type = t;
-                                                        up.emit((i, s.clone(), p.clone(), is_crit));
+                                                        up.emit((i, s, p.clone(), is_crit));
                                                     }
                                                 })
                                             }>
@@ -140,15 +140,15 @@ pub fn skills(props: &SkillProps) -> Html {
                                         </td>
                                         <td>
                                             <select onchange={
-                                                let s = skill.clone();
+                                                let s = skill;
                                                 let p = passives.clone();
                                                 let up = up_cb.clone();
                                                 Callback::from(move |e: Event| {
-                                                    let mut s = s.clone();
+                                                    let mut s = s;
                                                     let val = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
                                                     if let Ok(t) = Target::from_str(&val) {
                                                         s.target = t;
-                                                        up.emit((i, s.clone(), p.clone(), is_crit));
+                                                        up.emit((i, s, p.clone(), is_crit));
                                                     }
                                                 })
                                             }>
@@ -160,13 +160,13 @@ pub fn skills(props: &SkillProps) -> Html {
                                         <td>
                                             <input type="number" class="table-input" value={skill.cd.to_string()}
                                                 oninput={
-                                                    let s = skill.clone();
+                                                    let s = skill;
                                                     let p = passives.clone();
                                                     let up = up_cb.clone();
                                                     Callback::from(move |e: InputEvent| {
                                                         let mut s = s;
                                                         s.cd = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().unwrap_or(0);
-                                                        up.emit((i, s.clone(), p.clone(), is_crit));
+                                                        up.emit((i, s, p.clone(), is_crit));
                                                     })
                                                 }
                                             />
@@ -174,13 +174,13 @@ pub fn skills(props: &SkillProps) -> Html {
                                         <td>
                                             <input type="number" class="table-input" value={skill.mp.to_string()}
                                                 oninput={
-                                                    let s = skill.clone();
+                                                    let s = skill;
                                                     let p = passives.clone();
                                                     let up = up_cb.clone();
                                                     Callback::from(move |e: InputEvent| {
-                                                        let mut s = s.clone();
+                                                        let mut s = s;
                                                         s.mp = e.target_unchecked_into::<web_sys::HtmlInputElement>().value().parse().unwrap_or(0);
-                                                        up.emit((i, s.clone(), p.clone(), is_crit));
+                                                        up.emit((i, s, p.clone(), is_crit));
                                                     })
                                                 }
                                             />
@@ -189,11 +189,11 @@ pub fn skills(props: &SkillProps) -> Html {
                                         <td>
                                             <input type="checkbox" checked={is_crit}
                                                 onclick={
-                                                    let s = skill.clone();
+                                                    let s = skill;
                                                     let p = passives.clone();
                                                     let up = up_cb.clone();
                                                     Callback::from(move |_| {
-                                                        up.emit((i, s.clone(), p.clone(), !is_crit));
+                                                        up.emit((i, s, p.clone(), !is_crit));
                                                     })
                                                 }
                                             />
@@ -203,13 +203,13 @@ pub fn skills(props: &SkillProps) -> Html {
                                         </td>
                                         <td>
                                             <button class="add-buff-mini-btn" onclick={
-                                                let s = skill.clone();
+                                                let s = skill;
                                                 let p = passives.clone();
                                                 let up = up_cb.clone();
                                                 Callback::from(move |_| {
                                                     let mut p = p.clone();
                                                     p.push(CustomPassive::default());
-                                                    up.emit((i, s.clone(), p.clone(), is_crit));
+                                                    up.emit((i, s, p.clone(), is_crit));
                                                 })
                                             }>{"[+] Effect"}</button>
                                         </td>
@@ -235,7 +235,7 @@ pub fn skills(props: &SkillProps) -> Html {
 
 
                                                         <select onchange={
-                                                            let s = skill.clone();
+                                                            let s = skill;
                                                             let p_list = passives.clone();
                                                             let up = up_cb.clone();
                                                             Callback::from(move |e: Event| {
@@ -256,7 +256,7 @@ pub fn skills(props: &SkillProps) -> Html {
                                                                             p.stat_name = "Strength".to_string();
                                                                         }
                                                                     }
-                                                                    up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                    up.emit((i, s, p_list.clone(), is_crit));
                                                                 }
                                                             })
                                                         }>
@@ -267,14 +267,14 @@ pub fn skills(props: &SkillProps) -> Html {
 
 
                                                         <select onchange={
-                                                            let s = skill.clone();
+                                                            let s = skill;
                                                             let p_list = passives.clone();
                                                             let up = up_cb.clone();
                                                             Callback::from(move |e: Event| {
                                                                 let mut p_list = p_list.clone();
                                                                 if let Some(p) = p_list.get_mut(p_idx) {
                                                                     p.stat_name = e.target_unchecked_into::<web_sys::HtmlInputElement>().value();
-                                                                    up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                    up.emit((i, s, p_list.clone(), is_crit));
                                                                 }
                                                             })
                                                         }>
@@ -285,7 +285,7 @@ pub fn skills(props: &SkillProps) -> Html {
 
 
                                                         <select onchange={
-                                                            let s = skill.clone();
+                                                            let s = skill;
                                                             let p_list = passives.clone();
                                                             let up = up_cb.clone();
                                                             Callback::from(move |e: Event| {
@@ -296,7 +296,7 @@ pub fn skills(props: &SkillProps) -> Html {
                                                                         "Multiplicative" => OperationType::Multiplicative,
                                                                         _ => OperationType::Additive,
                                                                     };
-                                                                    up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                    up.emit((i, s, p_list.clone(), is_crit));
                                                                 }
                                                             })
                                                         }>
@@ -305,7 +305,7 @@ pub fn skills(props: &SkillProps) -> Html {
                                                         </select>
 
                                                         <input type="number" step="0.01" class="table-input buff-val-input" value={current_passive.value.to_string()} oninput={
-                                                            let s = skill.clone();
+                                                            let s = skill;
                                                             let p_list = passives.clone();
                                                             let up = up_cb.clone();
                                                             Callback::from(move |e: InputEvent| {
@@ -314,14 +314,14 @@ pub fn skills(props: &SkillProps) -> Html {
                                                                     let mut p_list = p_list.clone();
                                                                     if let Some(p) = p_list.get_mut(p_idx) {
                                                                         p.value = val;
-                                                                        up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                        up.emit((i, s, p_list.clone(), is_crit));
                                                                     }
                                                                 }
                                                             })
                                                         } />
 
                                                         <input type="number" step="1" class="table-input buff-val-input" value={current_passive.duration.unwrap_or(1000).to_string()} oninput={
-                                                            let s = skill.clone();
+                                                            let s = skill;
                                                             let p_list = passives.clone();
                                                             let up = up_cb.clone();
                                                             Callback::from(move |e: InputEvent| {
@@ -330,20 +330,20 @@ pub fn skills(props: &SkillProps) -> Html {
                                                                     let mut p_list = p_list.clone();
                                                                     if let Some(p) = p_list.get_mut(p_idx) {
                                                                         p.duration = Some(val);
-                                                                        up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                        up.emit((i, s, p_list.clone(), is_crit));
                                                                     }
                                                                 }
                                                             })
                                                         } />
 
                                                         <button class="mini-delete-btn" onclick={
-                                                            let s = skill.clone();
+                                                            let s = skill;
                                                             let p_list = passives.clone();
                                                             let up = up_cb.clone();
                                                             Callback::from(move |_| {
                                                                 let mut p_list = p_list.clone();
                                                                 p_list.remove(p_idx);
-                                                                up.emit((i, s.clone(), p_list.clone(), is_crit));
+                                                                up.emit((i, s, p_list.clone(), is_crit));
                                                             })
                                                         }>{"DEL"}</button>
                                                     </div>

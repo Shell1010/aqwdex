@@ -85,192 +85,188 @@ impl Default for ClassSettings {
 }
 
 pub fn calculate_primary_changes(primary_stats: &mut PrimaryStats, passive: &CustomPassive) -> PrimaryStats {
-    match passive.target_type {
-        TargetType::Primary => {
-            match passive.stat_name.as_str() {
-                "Strength" => {
-                    match passive.operation_type {
-                        OperationType::Additive => primary_stats.strength += passive.value as i32,
-                        OperationType::Multiplicative => {
-                            let stat = primary_stats.strength;
-                            primary_stats.strength = (stat as f32 * passive.value) as i32;
-                        }
+    if passive.target_type == TargetType::Primary {
+        
+        match passive.stat_name.as_str() {
+            "Strength" => {
+                match passive.operation_type {
+                    OperationType::Additive => primary_stats.strength += passive.value as i32,
+                    OperationType::Multiplicative => {
+                        let stat = primary_stats.strength;
+                        primary_stats.strength = (stat as f32 * passive.value) as i32;
                     }
-                },
-                "Dexterity" => {
-                    match passive.operation_type {
-                        OperationType::Additive => primary_stats.dexterity += passive.value as i32,
-                        OperationType::Multiplicative => {
-                            let stat = primary_stats.dexterity;
-                            primary_stats.dexterity = (stat as f32 * passive.value) as i32;
-                        }
+                }
+            },
+            "Dexterity" => {
+                match passive.operation_type {
+                    OperationType::Additive => primary_stats.dexterity += passive.value as i32,
+                    OperationType::Multiplicative => {
+                        let stat = primary_stats.dexterity;
+                        primary_stats.dexterity = (stat as f32 * passive.value) as i32;
                     }
-                },
-                "Wisdom" => {
-                    match passive.operation_type {
-                        OperationType::Additive => primary_stats.wisdom += passive.value as i32,
-                        OperationType::Multiplicative => primary_stats.wisdom *= {
-                            let stat = primary_stats.wisdom as f32;
-                            (stat * passive.value).round() as i32
-                        }
+                }
+            },
+            "Wisdom" => {
+                match passive.operation_type {
+                    OperationType::Additive => primary_stats.wisdom += passive.value as i32,
+                    OperationType::Multiplicative => primary_stats.wisdom *= {
+                        let stat = primary_stats.wisdom as f32;
+                        (stat * passive.value).round() as i32
                     }
-                },
-                "Intellect" => {
-                    match passive.operation_type {
-                        OperationType::Additive => primary_stats.intellect += passive.value as i32,
-                        OperationType::Multiplicative => {
-                            let stat = primary_stats.intellect as f32;
+                }
+            },
+            "Intellect" => {
+                match passive.operation_type {
+                    OperationType::Additive => primary_stats.intellect += passive.value as i32,
+                    OperationType::Multiplicative => {
+                        let stat = primary_stats.intellect as f32;
 
-                            primary_stats.intellect = (stat * passive.value).round() as i32;
-                        },
-                    }
-                },
-                "Endurance" => {
-                    match passive.operation_type {
-                        OperationType::Additive => primary_stats.endurance += passive.value as i32,
-                        OperationType::Multiplicative => {
-                            let stat = primary_stats.endurance as f32;
+                        primary_stats.intellect = (stat * passive.value).round() as i32;
+                    },
+                }
+            },
+            "Endurance" => {
+                match passive.operation_type {
+                    OperationType::Additive => primary_stats.endurance += passive.value as i32,
+                    OperationType::Multiplicative => {
+                        let stat = primary_stats.endurance as f32;
 
-                            primary_stats.endurance = (stat * passive.value).round() as i32;
-                        }
+                        primary_stats.endurance = (stat * passive.value).round() as i32;
                     }
-                },
-                "Luck" => {
-                    match passive.operation_type {
-                        OperationType::Additive => primary_stats.luck += passive.value as i32,
-                        OperationType::Multiplicative => {
-                            let stat = primary_stats.luck as f32;
+                }
+            },
+            "Luck" => {
+                match passive.operation_type {
+                    OperationType::Additive => primary_stats.luck += passive.value as i32,
+                    OperationType::Multiplicative => {
+                        let stat = primary_stats.luck as f32;
 
-                            primary_stats.luck = (stat * passive.value).round() as i32;
-                        }
+                        primary_stats.luck = (stat * passive.value).round() as i32;
                     }
-                },
-                _ => (),
-            }
+                }
+            },
+            _ => (),
         }
-        _ => ()
     }
     primary_stats.clone()
 }
 
 pub fn calculate_secondary_changes(secondary_stats: &mut SecondaryStats, passive: &CustomPassive) -> SecondaryStats {
-    match passive.target_type {
-        TargetType::Secondary => {
-            match passive.stat_name.as_str() {
-                "All Out" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.all_out += passive.value,
-                        OperationType::Multiplicative => secondary_stats.all_out *= passive.value,
-                    }
-                },
-                "All In" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.all_in -= passive.value,
-                        OperationType::Multiplicative => secondary_stats.all_in *= passive.value,
-                    }
-                },
-                "Phy Out" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.phy_out += passive.value,
-                        OperationType::Multiplicative => secondary_stats.phy_out *= passive.value,
-                    }
-                },
-                "Phy In" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.phy_in -= passive.value,
-                        OperationType::Multiplicative => secondary_stats.phy_in *= passive.value,
-                    }
-                },
-                "Mag Out" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.mag_out += passive.value,
-                        OperationType::Multiplicative => secondary_stats.mag_out *= passive.value,
-                    }
-                },
-                "Mag In" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.mag_in -= passive.value,
-                        OperationType::Multiplicative => secondary_stats.mag_in *= passive.value,
-                    }
-                },
-                "Heal Out" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.heal_out += passive.value,
-                        OperationType::Multiplicative => secondary_stats.heal_out *= passive.value,
-                    }
-                },
-                "Heal In" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.heal_in -= passive.value,
-                        OperationType::Multiplicative => secondary_stats.heal_in *= passive.value,
-                    }
-                },
-                "DoT Out" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.dot_out += passive.value,
-                        OperationType::Multiplicative => secondary_stats.dot_out *= passive.value,
-                    }
-                },
-                "DoT In" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.dot_in -= passive.value,
-                        OperationType::Multiplicative => secondary_stats.dot_in *= passive.value,
-                    }
-                },
-                "Mana Consumption" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.mana_consumption += passive.value,
-                        OperationType::Multiplicative => secondary_stats.mana_consumption *= passive.value,
-                    }
-                },
-                "Attack Power" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.attack_power += passive.value,
-                        OperationType::Multiplicative => secondary_stats.attack_power *= passive.value,
-                    }
-                },
-                "Spell Power" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.spell_power += passive.value,
-                        OperationType::Multiplicative => secondary_stats.spell_power *= passive.value,
-                    }
-                },
-                "Hit Chance" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.hit_chance += passive.value,
-                        OperationType::Multiplicative => secondary_stats.hit_chance *= passive.value,
-                    }
-                },
-                "Haste" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.haste += passive.value,
-                        OperationType::Multiplicative => secondary_stats.haste *= passive.value,
-                    }
-                },
-                "Dodge Chance" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.dodge += passive.value,
-                        OperationType::Multiplicative => secondary_stats.dodge *= passive.value,
-                    }
-                },
-                "Crit Chance" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.crit_chance += passive.value,
-                        OperationType::Multiplicative => secondary_stats.crit_chance *= passive.value,
-                    }
-                },
-                "Crit Modifier" => {
-                    match passive.operation_type {
-                        OperationType::Additive => secondary_stats.crit_mod += passive.value,
-                        OperationType::Multiplicative => secondary_stats.crit_mod *= passive.value,
-                    }
-                },
+    if passive.target_type == TargetType::Secondary {
+        
+        match passive.stat_name.as_str() {
+            "All Out" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.all_out += passive.value,
+                    OperationType::Multiplicative => secondary_stats.all_out *= passive.value,
+                }
+            },
+            "All In" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.all_in -= passive.value,
+                    OperationType::Multiplicative => secondary_stats.all_in *= passive.value,
+                }
+            },
+            "Phy Out" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.phy_out += passive.value,
+                    OperationType::Multiplicative => secondary_stats.phy_out *= passive.value,
+                }
+            },
+            "Phy In" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.phy_in -= passive.value,
+                    OperationType::Multiplicative => secondary_stats.phy_in *= passive.value,
+                }
+            },
+            "Mag Out" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.mag_out += passive.value,
+                    OperationType::Multiplicative => secondary_stats.mag_out *= passive.value,
+                }
+            },
+            "Mag In" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.mag_in -= passive.value,
+                    OperationType::Multiplicative => secondary_stats.mag_in *= passive.value,
+                }
+            },
+            "Heal Out" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.heal_out += passive.value,
+                    OperationType::Multiplicative => secondary_stats.heal_out *= passive.value,
+                }
+            },
+            "Heal In" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.heal_in -= passive.value,
+                    OperationType::Multiplicative => secondary_stats.heal_in *= passive.value,
+                }
+            },
+            "DoT Out" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.dot_out += passive.value,
+                    OperationType::Multiplicative => secondary_stats.dot_out *= passive.value,
+                }
+            },
+            "DoT In" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.dot_in -= passive.value,
+                    OperationType::Multiplicative => secondary_stats.dot_in *= passive.value,
+                }
+            },
+            "Mana Consumption" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.mana_consumption += passive.value,
+                    OperationType::Multiplicative => secondary_stats.mana_consumption *= passive.value,
+                }
+            },
+            "Attack Power" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.attack_power += passive.value,
+                    OperationType::Multiplicative => secondary_stats.attack_power *= passive.value,
+                }
+            },
+            "Spell Power" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.spell_power += passive.value,
+                    OperationType::Multiplicative => secondary_stats.spell_power *= passive.value,
+                }
+            },
+            "Hit Chance" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.hit_chance += passive.value,
+                    OperationType::Multiplicative => secondary_stats.hit_chance *= passive.value,
+                }
+            },
+            "Haste" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.haste += passive.value,
+                    OperationType::Multiplicative => secondary_stats.haste *= passive.value,
+                }
+            },
+            "Dodge Chance" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.dodge += passive.value,
+                    OperationType::Multiplicative => secondary_stats.dodge *= passive.value,
+                }
+            },
+            "Crit Chance" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.crit_chance += passive.value,
+                    OperationType::Multiplicative => secondary_stats.crit_chance *= passive.value,
+                }
+            },
+            "Crit Modifier" => {
+                match passive.operation_type {
+                    OperationType::Additive => secondary_stats.crit_mod += passive.value,
+                    OperationType::Multiplicative => secondary_stats.crit_mod *= passive.value,
+                }
+            },
 
-                _ => (),
+            _ => (),
 
-            }
-        },
-        _ => ()
+        }
     }
     secondary_stats.clone()
 }
@@ -379,7 +375,7 @@ impl ClassSettings {
     }
 }
 
-
+#[allow(clippy::redundant_closure)]
 #[function_component(PlayerSettings)]
 pub fn player_settings() -> Html {
     let settings = use_state(|| ClassSettings::default());

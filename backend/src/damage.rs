@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{error::BackendError, player::{PrimaryStats, SecondaryStats}};
+use crate::{error::BackendError, player::SecondaryStats};
 use serde::{Serialize, Deserialize};
 
 

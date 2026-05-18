@@ -41,12 +41,9 @@ fn ls_load() -> HashMap<String, ClassSettings> {
 }
 
 fn ls_save(builds: &HashMap<String, ClassSettings>) {
-    if let Some(window) = web_sys::window() {
-        if let Ok(Some(storage)) = window.local_storage() {
-            if let Ok(json) = serde_json::to_string(builds) {
-                let _ = storage.set_item(STORAGE_KEY, &json);
-            }
-        }
+    if let Some(window) = web_sys::window() && let Ok(Some(storage)) = window.local_storage() &&
+    let Ok(json) = serde_json::to_string(builds) {
+        let _ = storage.set_item(STORAGE_KEY, &json); 
     }
 }
 
@@ -58,16 +55,9 @@ fn ls_save(builds: &HashMap<String, ClassSettings>) {
 /// In browser: reads from `localStorage`.
 pub async fn load_all_builds() -> HashMap<String, ClassSettings> {
     if let Some(invoke_fn) = tauri_invoke_fn() {
-        // load_builds takes no arguments — pass an empty object
         let args = Object::new();
-        if let Some(promise) = tauri_call(&invoke_fn, "load_builds", &args.into()) {
-            if let Ok(result) = JsFuture::from(promise).await {
-                if let Some(json) = result.as_string() {
-                    if let Ok(builds) = serde_json::from_str::<HashMap<String, ClassSettings>>(&json) {
-                        return builds;
-                    }
-                }
-            }
+        if let Some(promise) = tauri_call(&invoke_fn, "load_builds", &args.into()) && let Ok(result) = JsFuture::from(promise).await && let Some(json) = result.as_string() && let Ok(builds) = serde_json::from_str::<HashMap<String, ClassSettings>>(&json) {
+            return builds;
         }
     }
 
@@ -79,23 +69,22 @@ pub async fn load_all_builds() -> HashMap<String, ClassSettings> {
 /// In Tauri: writes `{app_data_dir}/builds.json` via the `save_builds` command.
 /// In browser: writes to `localStorage`.
 pub async fn save_all_builds(builds: &HashMap<String, ClassSettings>) {
-    if let Some(invoke_fn) = tauri_invoke_fn() {
-        if let Ok(json) = serde_json::to_string(builds) {
-            // Tauri 2 converts camelCase JS arg names → snake_case Rust params.
-            // buildsJson  →  builds_json: String
-            let args = Object::new();
-            let _ = Reflect::set(
-                &args,
-                &JsValue::from_str("buildsJson"),
-                &JsValue::from_str(&json),
-            );
-            if let Some(promise) = tauri_call(&invoke_fn, "save_builds", &args.into()) {
-                // Await so the write completes before the caller continues.
-                let _ = JsFuture::from(promise).await;
-                return;
-            }
+    if let Some(invoke_fn) = tauri_invoke_fn() && let Ok(json) = serde_json::to_string(builds) {
+        // Tauri 2 converts camelCase JS arg names → snake_case Rust params.
+        // buildsJson  →  builds_json: String
+        let args = Object::new();
+        let _ = Reflect::set(
+            &args,
+            &JsValue::from_str("buildsJson"),
+            &JsValue::from_str(&json),
+        );
+        if let Some(promise) = tauri_call(&invoke_fn, "save_builds", &args.into()) {
+            // Await so the write completes before the caller continues.
+            let _ = JsFuture::from(promise).await;
+            return;
         }
     }
+
 
     ls_save(builds);
 }

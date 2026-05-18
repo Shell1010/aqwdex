@@ -3,8 +3,8 @@ use serde::{Serialize, Deserialize};
 const MAX_LEVEL: f32 = 100.0;
 const GST_BASE: f32 = 12.0;
 
-
-use crate::player::PrimaryStats;
+use std::str::FromStr;
+use crate::{error::BackendError, player::PrimaryStats};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum Stat {
@@ -87,6 +87,7 @@ impl Trait {
     }
 }
 
+#[allow(clippy::should_implement_trait)]
 impl Trait {
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
@@ -113,8 +114,8 @@ pub struct Enhancement {
 }
 
 impl Enhancement {
-    pub fn new(level: u32, rarity: u32, pattern_id: &str, trait_id: &str) -> Option<Self> {
-        let trait_ = Trait::from_str(trait_id)?;
+    pub fn new(level: u32, rarity: u32, pattern_id: &str, trait_id: &str) -> Result<Self, BackendError> {
+        let trait_ = Trait::from_str(trait_id).unwrap();
         EnhancementPattern::from_str(pattern_id).map(|pattern| Self {
             level,
             rarity,
@@ -185,28 +186,34 @@ impl EnhancementPattern {
         })
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
-        use EnhancementPattern::*;
-        Some(match s.to_ascii_lowercase().as_str() {
-            "adventurer" => Adventurer,
-            "fighter" => Fighter,
-            "thief" => Thief,
-            "armsman" => Armsman,
-            "hybrid" => Hybrid,
-            "wizard" => Wizard,
-            "healer" => Healer,
-            "spellbreaker" => Spellbreaker,
-            "lucky" => Lucky,
-            "forge" => Forge,
-            "vim" => Vim,
-            "hearty" => Hearty,
-            "examen" => Examen,
-            "pneuma" => Pneuma,
-            "anima" => Anima,
-            _ => return None,
-        })
+}
+
+impl std::str::FromStr for EnhancementPattern {
+    type Err = BackendError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "adventurer" => Ok(EnhancementPattern::Adventurer),
+            "fighter" => Ok(EnhancementPattern::Fighter),
+            "thief" => Ok(EnhancementPattern::Thief),
+            "armsman" => Ok(EnhancementPattern::Armsman),
+            "hybrid" => Ok(EnhancementPattern::Hybrid),
+            "wizard" => Ok(EnhancementPattern::Wizard),
+            "healer" => Ok(EnhancementPattern::Healer),
+            "spellbreaker" => Ok(EnhancementPattern::Spellbreaker),
+            "lucky" => Ok(EnhancementPattern::Lucky),
+            "forge" => Ok(EnhancementPattern::Forge),
+            "vim" => Ok(EnhancementPattern::Vim),
+            "hearty" => Ok(EnhancementPattern::Hearty),
+            "examen" => Ok(EnhancementPattern::Examen),
+            "pneuma" => Ok(EnhancementPattern::Pneuma),
+            "anima" => Ok(EnhancementPattern::Anima),
+            _ => Err(BackendError::InvalidEnhancementPattern(s.to_string())),
+        }
+        
     }
 }
+
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub enum GearSlot {
@@ -226,18 +233,22 @@ impl GearSlot {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
+
+}
+
+impl std::str::FromStr for GearSlot {
+    type Err = BackendError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_ascii_lowercase().as_str() {
-            "he" | "helm" => Some(GearSlot::Helm),
-            "ar" | "armor" => Some(GearSlot::Armor),
-            "ba" | "cape" | "back" => Some(GearSlot::Cape),
-            "we" | "weapon" => Some(GearSlot::Weapon),
-            _ => None,
+            "he" | "helm" => Ok(GearSlot::Helm),
+            "ar" | "armor" => Ok(GearSlot::Armor),
+            "ba" | "cape" | "back" => Ok(GearSlot::Cape),
+            "we" | "weapon" => Ok(GearSlot::Weapon),
+            _ => Err(BackendError::InvalidGearSlot(format!("invalid gear slot: {}", s))),
         }
     }
 }
-
-
 
 #[derive(Debug)]
 pub struct StatBlock {
@@ -249,6 +260,12 @@ pub struct StatBlock {
     pub lck_stat: i32,
 }
 
+
+impl Default for StatBlock {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl StatBlock {
     pub fn new() -> Self {
         Self {
@@ -276,6 +293,8 @@ impl StatBlock {
         }
     }
 }
+
+
 
 pub fn gst_total(level: u32, rarity: u32) -> f32 {
 

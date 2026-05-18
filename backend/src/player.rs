@@ -1,12 +1,8 @@
-use std::char::MAX;
+
 use std::fmt::Display;
 use std::str::FromStr;
 use serde::{Deserialize, Serialize};
-
-use crate::damage::Weapon;
 use crate::error::BackendError;
-use crate::gear::GearSlot;
-use crate::player;
 
 pub const MAX_LEVEL: u32 = 100;pub const X_FACTOR: u32 = 1640;
 
@@ -316,12 +312,8 @@ impl ClassModel {
     }
 
     pub fn mag_in_convert(&self, player: &Player, primary: &PrimaryStats ) -> f32 {
-        match self {
-            _ => {
-                let int_mag_in = (primary.intellect as f32) * -1.0 * player.efficiency();
-                int_mag_in + 100.0
-            }
-        }
+        let int_mag_in = -(primary.intellect as f32) * player.efficiency();
+        int_mag_in + 100.0
     }
 
     pub fn hit_chance_convert(&self, player: &Player, primary: &PrimaryStats) -> f32 {
@@ -488,7 +480,7 @@ impl ClassModel {
         }
     }
     pub fn secondary_stats_convert(&self, player: &Player, primary: &PrimaryStats) -> SecondaryStats {
-        let hp = player.base_hp() + (primary.endurance as i32 * 5) as i32;
+        let hp = player.base_hp() + (primary.endurance * 5);
         println!("BASE HP: {}", hp);
         SecondaryStats {
             phy_out: self.phy_out_convert(),
@@ -509,7 +501,7 @@ impl ClassModel {
             hit_chance: self.hit_chance_convert(player, primary),
             attack_power: self.attack_power_convert(player, primary),
             spell_power: self.spell_power_convert(player, primary),
-            hp: hp,
+            hp,
             current_hp: hp,
             mp: 100,
             current_mp: 100,
@@ -620,8 +612,8 @@ pub struct SecondaryStats {
     pub current_mp: i32,
 }
 
-impl SecondaryStats {
-    pub fn new() -> Self {
+impl Default for SecondaryStats {
+    fn default() -> Self {
         SecondaryStats {
             phy_out: 100.0,
             phy_in: 100.0,
@@ -648,7 +640,9 @@ impl SecondaryStats {
 
         }
     }
+}
 
+impl SecondaryStats {
     pub fn add(&mut self, other: &SecondaryStats) {
         self.phy_out += other.phy_out;
         self.phy_in += other.phy_in;

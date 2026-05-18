@@ -1,7 +1,7 @@
 mod app;
 pub mod macros;
 
-use app::app::App;
+use app::init::App;
 
 
 fn main() {

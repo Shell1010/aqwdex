@@ -3,12 +3,12 @@ pub mod error;
 pub mod gear;
 pub mod damage;
 pub mod enemy;
-use error::BackendError;
-use std::str::FromStr;
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
     #[test]
     fn test_class_model_from_str() {
         use player::ClassModel;

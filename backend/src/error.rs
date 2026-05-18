@@ -19,5 +19,11 @@ pub enum BackendError {
 
     #[error("invalid target type: {0}")]
     InvalidTargetType(String),
+
+    #[error("invalid enhancement pattern: {0}")]
+    InvalidEnhancementPattern(String),
+
+    #[error("invalid gear slot: {0}")]
+    InvalidGearSlot(String),
 }
 
