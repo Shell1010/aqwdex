@@ -191,36 +191,36 @@ impl ClassModel {
             ClassModel::TankMelee => {
                 let str_ap = (primary.strength * 2) as f32;
                 let luk_ap = (primary.luck as f32) * 0.7;
-                str_ap + luk_ap
+                (str_ap + luk_ap).round()
             },
             ClassModel::DodgeMelee => {
                 let str_ap = (primary.strength * 2) as f32;
                 let luk_ap = (primary.luck as f32) * 0.7;
-                str_ap + luk_ap
+                (str_ap + luk_ap).round()
             },
             ClassModel::PowerMelee => {
                 let str_ap = (primary.strength * 2) as f32;
                 let luk_ap = (primary.luck as f32) * 0.7;
-                str_ap + luk_ap
+                (str_ap + luk_ap).round()
             },
             ClassModel::DefensiveCaster => {
-                (primary.strength * 2) as f32
+                ((primary.strength * 2) as f32).round()
             },
             ClassModel::OffensiveCaster => {
-                (primary.strength * 2) as f32
+                ((primary.strength * 2) as f32).round()
             },
             ClassModel::PowerCaster => {
-                (primary.strength * 2) as f32
+                ((primary.strength * 2) as f32).round()
             },
             ClassModel::FullHybrid => {
                 let str_ap = (primary.strength * 2) as f32;
                 let luk_ap = (primary.luck as f32) * 0.7;
-                str_ap + luk_ap
+                (str_ap + luk_ap).round()
             },
             ClassModel::LuckHybrid => {
                 let str_ap = primary.strength as f32 * 1.4;
                 let luk_ap = primary.luck as f32;
-                str_ap + luk_ap
+                (str_ap + luk_ap).round()
             }
         }
 
@@ -229,38 +229,38 @@ impl ClassModel {
     pub fn spell_power_convert(&self, _player: &Player, primary: &PrimaryStats) -> f32 {
         match self {
             ClassModel::TankMelee => {
-                primary.intellect as f32 * 2.0
+                (primary.intellect as f32 * 2.0).round()
             },
             ClassModel::DodgeMelee => {
-                primary.intellect as f32 * 2.0
+                (primary.intellect as f32 * 2.0).round()
             },
             ClassModel::PowerMelee => {
-                primary.intellect as f32 * 2.0
+                (primary.intellect as f32 * 2.0).round()
             },
             ClassModel::DefensiveCaster => {
                 let int_sp = primary.intellect as f32 * 2.0;
                 let luk_sp = primary.luck as f32 * 0.7;
-                int_sp + luk_sp
+                (int_sp + luk_sp).round()
             },
             ClassModel::OffensiveCaster => {
                 let int_sp = primary.intellect as f32 * 2.0;
                 let luk_sp = primary.luck as f32 * 0.7;
-                int_sp + luk_sp
+                (int_sp + luk_sp).round()
             },
             ClassModel::PowerCaster => {
                 let int_sp = primary.intellect as f32 * 2.0;
                 let luk_sp = primary.luck as f32 * 0.7;
-                int_sp + luk_sp
+                (int_sp + luk_sp).round()
             },
             ClassModel::FullHybrid => {
                 let int_sp = primary.intellect as f32 * 2.0;
                 let luk_sp = primary.luck as f32 * 0.7;
-                int_sp + luk_sp
+                (int_sp + luk_sp).round()
             },
             ClassModel::LuckHybrid => {
                 let int_sp = primary.intellect as f32 * 1.4;
                 let luk_sp = primary.luck as f32;
-                int_sp + luk_sp
+                (int_sp + luk_sp).round()
             }
         }
     }

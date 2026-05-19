@@ -38,7 +38,7 @@ pub enum DamageSource {
 
 
 impl DamageSource {
-    fn compute(&self, weapon: &Weapon, stat: &SecondaryStats) -> f32 {
+    pub fn compute(&self, weapon: &Weapon, stat: &SecondaryStats) -> f32 {
         match self {
             DamageSource::AP1 => weapon.dps + (0.1 * stat.attack_power),
             DamageSource::AP2 => 2.0 * DamageSource::AP1.compute(weapon, stat) * weapon.range,
@@ -200,8 +200,23 @@ pub struct Properties {
     pub force_result: Option<ForceResult>,
     pub add_crit: Option<f32>,
     pub mana_back: Option<u32>,
-    pub hp_back: Option<u32>,
+    pub hp_back: Option<DamageSource>,
+    pub stacking: Option<StackingFunction>
 }
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
+pub enum StackingFormula {
+    Weird,
+    Normal
+}
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
+pub struct StackingFunction {
+    stack_limit: u32,
+    stacks: u32,
+    formula: StackingFormula
+}
+
+
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Skill {
@@ -216,10 +231,27 @@ pub struct Skill {
 
 impl Skill {
     pub fn compute(&self, weapon: &Weapon, secondary: &SecondaryStats, crit: bool) -> f32 {
+        let mut crit = crit;
+        if let Some(val) = &self.properties.force_result && val == &ForceResult::Crit {
+            crit = true;
+        }
+    
+        let mut stacking_mod = 0.0;
+        if let Some(stacking) = &self.properties.stacking {
+            match stacking.formula {
+                StackingFormula::Weird => {
+                    stacking_mod = (stacking.stacks as f32).clamp(0.0, stacking.stack_limit as f32) / 2.0;
+                }
+                StackingFormula::Normal => {
+                    stacking_mod = ((stacking.stacks as f32).clamp(0.0, stacking.stack_limit as f32) / 2.0) + 1.0;
+                }
+            }
+        }
+        
         let type_final_modifier = &self.damage_type.self_modifiers(secondary, crit);
         let dsrc_value = &self.dsrc.compute(weapon, secondary);
         println!("{} --- {} --- {}", dsrc_value, type_final_modifier, weapon.boost.multiplier());
-        dsrc_value * type_final_modifier * weapon.boost.multiplier() * self.damage
+        dsrc_value * type_final_modifier * weapon.boost.multiplier() * self.damage * stacking_mod
     }
 }
 
@@ -233,6 +265,7 @@ impl Default for Skill {
             mp: 10,
             target: Target::Enemy,
             properties: Properties {
+                stacking: None,
                 force_result: None,
                 add_crit: None,
                 mana_back: None,
@@ -253,7 +286,7 @@ fn test_skill_compute() {
         cd: 1000,
         mp: 0,
         target: Target::Enemy,
-        properties: Properties { force_result: None, add_crit: None, mana_back: None, hp_back: None }
+        properties: Properties { force_result: None, add_crit: None, mana_back: None, hp_back: None, stacking: None }
         
     };
     let weapon = Weapon::default();

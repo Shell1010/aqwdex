@@ -91,16 +91,30 @@ pub fn dps_calculator(props: &DpsProps) -> Html {
         // Calculates raw average damage for a specific skill (Crit + Non-Crit weighted)
         let compute_avg_dmg = |s_idx: usize, secondary: &backend::player::SecondaryStats, enemy: &EnemySecondaryStats| -> (f32, f32) {
             let (skill, _, _) = &settings.skills[s_idx];
-            let crit = (secondary.crit_chance / 100.0).clamp(0.0, 1.0);
-            
+            let mut player_dmg = 0.0;
+            let mut enemy_dmg = 0.0;
+            let mut crit = (secondary.crit_chance / 100.0).clamp(0.0, 1.0);
+            if let Some(add_crit) = skill.properties.add_crit {
+                crit += add_crit;
+            }
+
+            if let Some(val) = skill.properties.mana_back {
+                
+            }
+
+            if let Some(func) = skill.properties.hp_back {
+                player_dmg -= -func.compute(&settings.weapon, secondary);
+            }
             let dmg_non_crit = skill.compute(&settings.weapon, secondary, false);
             let avg_raw = dmg_non_crit * (1.0 + crit * (secondary.crit_mod / 100.0));
     
             if skill.target == Target::Yourself {
-                (0.0, avg_raw) // Negative value translates to healing mathematically
+                player_dmg = avg_raw;
+                (enemy_dmg, player_dmg) // Negative value translates to healing mathematically
             } else {
                 let e_mod = enemy_incoming_modifier(&skill.damage_type, enemy);
-                (avg_raw * e_mod, 0.0)
+                enemy_dmg = avg_raw;
+                (enemy_dmg * e_mod, player_dmg)
             }
         };
 

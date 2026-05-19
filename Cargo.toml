@@ -2,3 +2,17 @@
 resolver = "3"
 members = ["backend", "main"]
 
+[profile.dev]
+opt-level = 0          # Dev default: compile local code with zero optimizations
+incremental = true     # Dev default: reuse previously compiled parts of your crate
+debug = 1              # "Line tables only". Provides file/line info for panics, but skips heavy variable debugging info to speed up compilation.
+
+# Crucial for macOS/Linux/Windows: separates debug info from the main binary.
+# This prevents the linker from spending ages processing giant binary files.
+split-debuginfo = "unpacked" 
+
+# Clever trick: Compile external dependencies with optimizations.
+# This makes the first build slower, but subsequent builds are much faster because 
+# procedural macros, build scripts, and heavy traits run instantly.
+[profile.dev.package."*"]
+opt-level = 3
